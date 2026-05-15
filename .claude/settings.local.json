@@ -44,7 +44,9 @@
       "Bash(kill 3932)",
       "Bash(taskkill /PID 21076 /F)",
       "Bash(kill -9 3596)",
-      "Bash(taskkill //PID 3596 //F)"
+      "Bash(taskkill //PID 3596 //F)",
+      "Bash(node -e \"require\\('tslib'\\)\")",
+      "Bash(Remove-Item -Recurse -Force \"c:\\\\Users\\\\selor\\\\Desktop\\\\log book\\\\frontend\\\\node_modules\\\\.vite\" -ErrorAction SilentlyContinue)"
     ],
     "additionalDirectories": [
       "C:\\Users\\selor\\Desktop\\log book\\backend"
