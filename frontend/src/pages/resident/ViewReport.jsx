@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { pdf } from '@react-pdf/renderer';
 import { reportAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
 import UnitBadge from '../../components/UnitBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { SingleReportDoc } from '../../components/ReportPDF';
 import { DAYS, DAY_LABELS, formatDate, formatWeek } from '../../utils/helpers';
-import { ArrowLeft, MessageSquare, Calendar, Send, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, Send, Trash2, Download, Loader2 } from 'lucide-react';
 
 const ViewReport = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [report, setReport]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeDay, setActiveDay] = useState('monday');
-  const [submitting, setSubmitting] = useState(false);
-  const [deleting, setDeleting]     = useState(false);
+  const [submitting,  setSubmitting]  = useState(false);
+  const [deleting,    setDeleting]    = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     reportAPI.getMyReport(id)
@@ -28,6 +33,24 @@ const ViewReport = () => {
       await reportAPI.submitReport(id);
       setReport(r => ({ ...r, status: 'submitted' }));
     } finally { setSubmitting(false); }
+  };
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const reportWithResident = { ...report, resident: user };
+      const blob = await pdf(<SingleReportDoc report={reportWithResident} />).toBlob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `GHS_Report_${report.unit?.replace(/\s+/g, '_')}_${formatDate(report.weekStartDate)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -64,18 +87,26 @@ const ViewReport = () => {
             <Calendar size={11} /> Created {formatDate(report.createdAt)}
           </p>
         </div>
-        {isDraft && (
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={handleDelete} disabled={deleting}
-              className="btn-ghost text-red-400 hover:bg-red-50 hover:text-red-500">
-              <Trash2 size={14} /> Delete
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isDraft ? (
+            <>
+              <button onClick={handleDelete} disabled={deleting}
+                className="btn-ghost text-red-400 hover:bg-red-50 hover:text-red-500">
+                <Trash2 size={14} /> Delete
+              </button>
+              <button onClick={handleSubmit} disabled={submitting} className="btn-primary">
+                {submitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send size={14} />}
+                Submit
+              </button>
+            </>
+          ) : (
+            <button onClick={handleDownload} disabled={downloading} className="btn-primary">
+              {downloading
+                ? <><Loader2 size={14} className="animate-spin" /> Generating…</>
+                : <><Download size={14} /> Download PDF</>}
             </button>
-            <button onClick={handleSubmit} disabled={submitting} className="btn-primary">
-              {submitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send size={14} />}
-              Submit
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Day tabs */}

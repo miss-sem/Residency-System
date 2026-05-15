@@ -2,12 +2,13 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   FileText, Users, ClipboardList, LayoutDashboard,
-  LogOut, ChevronRight, X, Settings,
+  LogOut, ChevronRight, X, Settings, Download,
 } from 'lucide-react';
 
 const residentLinks = [
   { to: '/resident/reports/new', icon: FileText,      label: 'New Report' },
   { to: '/resident/reports',     icon: ClipboardList, label: 'My Reports' },
+  { to: '/resident/generate',    icon: Download,      label: 'Generate Report' },
 ];
 
 const adminLinks = [

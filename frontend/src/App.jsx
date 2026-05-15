@@ -5,10 +5,10 @@ import AppLayout from './layouts/AppLayout';
 
 import AuthLayout from './layouts/AuthLayout';
 
-import ResidentDashboard from './pages/resident/Dashboard';
 import CreateReport      from './pages/resident/CreateReport';
 import ReportHistory     from './pages/resident/ReportHistory';
 import ViewReport        from './pages/resident/ViewReport';
+import GenerateReport    from './pages/resident/GenerateReport';
 
 import AdminDashboard from './pages/admin/Dashboard';
 import Residents      from './pages/admin/Residents';
@@ -30,6 +30,7 @@ const App = () => (
           <Route path="/resident/reports/new" element={<CreateReport />} />
           <Route path="/resident/reports"     element={<ReportHistory />} />
           <Route path="/resident/reports/:id" element={<ViewReport />} />
+          <Route path="/resident/generate"    element={<GenerateReport />} />
           <Route path="/resident/settings"    element={<Settings />} />
         </Route>
 
