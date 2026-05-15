@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Users\\\\selor\\\\.claude\\\\projects\\\\\")",
+      "Read(//c/Users/selor/.claude/**)",
+      "Bash(mkdir -p \"/c/Users/selor/Desktop/log book/backend/config\" \"/c/Users/selor/Desktop/log book/backend/models\" \"/c/Users/selor/Desktop/log book/backend/controllers\" \"/c/Users/selor/Desktop/log book/backend/routes\" \"/c/Users/selor/Desktop/log book/backend/middleware\" && echo \"Done\")",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(64\\).toString\\('hex'\\)\\)\")",
+      "Bash(npm install *)",
+      "Bash(timeout 8 node server.js)",
+      "Bash(npm create *)",
+      "Bash(npx tailwindcss *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(echo \"Backend PID: $!\")",
+      "Bash(echo \"Frontend PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\selor\\\\Desktop\\\\log book\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(grep -E \"\\\\.\\(jsx|tsx|js|ts|json|html|css\\)$\")",
+      "Bash(grep -E \"^c:\\\\\\\\Users.*\\\\.\\(jsx|js\\)$\")",
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/register -H \"Content-Type: application/json\" -d \"{\\\\\"name\\\\\":\\\\\"Test User\\\\\",\\\\\"email\\\\\":\\\\\"test@example.com\\\\\",\\\\\"password\\\\\":\\\\\"123456\\\\\",\\\\\"department\\\\\":\\\\\"Internal Medicine\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/register -H \"Content-Type: application/json\" -d \"{\\\\\"name\\\\\":\\\\\"Selorm Sem\\\\\",\\\\\"email\\\\\":\\\\\"selormsem48@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"123456789\\\\\",\\\\\"department\\\\\":\\\\\"Internal Medicine\\\\\"}\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/register -H \"Content-Type: application/json\" -H \"Origin: http://localhost:5173\" -d \"{\\\\\"name\\\\\":\\\\\"New Test\\\\\",\\\\\"email\\\\\":\\\\\"newtest999@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"123456\\\\\"}\")",
+      "Bash(npx vite *)",
+      "Bash(npm start *)",
+      "Bash(npx kill-port *)",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(node scripts/makeAdmin.js)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5000)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const mongoose = require\\('mongoose'\\); mongoose.connect\\(process.env.MONGO_URI\\).then\\(\\(\\) => { console.log\\('DB OK'\\); process.exit\\(0\\); }\\).catch\\(e => { console.log\\('DB ERROR:', e.message\\); process.exit\\(1\\); }\\)\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"selormsem48@gmail.com\\\\\",\\\\\"password\\\\\":\\\\\"test123\\\\\"}\")",
+      "Bash(Invoke-RestMethod -Uri \"http://localhost:5000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"selormsem48@gmail.com\",\"password\":\"test123\"}')",
+      "Bash(taskkill /PID 2524 /F)",
+      "Bash(node server.js)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"selormsem48@gmail.com\",\"password\":\"test123\"}')",
+      "Bash(node -e ' *)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(cmd.exe //c \"for /f \\\\\"tokens=5\\\\\" %a in \\('netstat -ano ^| findstr :5000'\\) do taskkill /PID %a /F\")",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -I{} cmd.exe //c \"taskkill /PID {} /F\")",
+      "Bash(kill 3932)",
+      "Bash(taskkill /PID 21076 /F)",
+      "Bash(kill -9 3596)",
+      "Bash(taskkill //PID 3596 //F)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\selor\\Desktop\\log book\\backend"
+    ]
+  }
+}
