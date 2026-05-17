@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt   = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,13 +23,13 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['resident', 'admin'],
+      enum: ['resident', 'admin', 'reviewer'],
       default: 'resident',
     },
-    department: {
-      type: String,
-      trim: true,
-    },
+    resetPasswordToken:   { type: String, select: false },
+    resetPasswordExpires: { type: Date,   select: false },
+    inviteToken:          { type: String, select: false },
+    inviteExpires:        { type: Date,   select: false },
   },
   { timestamps: true }
 );

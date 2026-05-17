@@ -29,6 +29,13 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
+const adminOrReviewer = (req, res, next) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'reviewer') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  next();
+};
+
 const residentOnly = (req, res, next) => {
   if (req.user.role !== 'resident') {
     return res.status(403).json({ message: 'Access denied: residents only' });
@@ -36,4 +43,4 @@ const residentOnly = (req, res, next) => {
   next();
 };
 
-module.exports = { protect, adminOnly, residentOnly };
+module.exports = { protect, adminOnly, adminOrReviewer, residentOnly };

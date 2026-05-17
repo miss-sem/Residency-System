@@ -7,14 +7,14 @@ const {
   deleteResident,
   getDashboardStats,
 } = require('../controllers/adminController');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, adminOrReviewer } = require('../middleware/auth');
 
-router.use(protect, adminOnly);
+router.use(protect);
 
-router.get('/dashboard', getDashboardStats);
-router.post('/residents', createResident);
-router.get('/residents', getAllResidents);
-router.put('/residents/:id', updateResident);
-router.delete('/residents/:id', deleteResident);
+router.get('/dashboard',      adminOrReviewer, getDashboardStats);
+router.get('/residents',      adminOrReviewer, getAllResidents);
+router.post('/residents',     adminOnly,       createResident);
+router.put('/residents/:id',  adminOnly,       updateResident);
+router.delete('/residents/:id', adminOnly,     deleteResident);
 
 module.exports = router;

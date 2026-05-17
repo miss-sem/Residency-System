@@ -1,5 +1,6 @@
 const WeeklyReport = require('../models/WeeklyReport');
-const User = require('../models/User');
+const User         = require('../models/User');
+const Notification = require('../models/Notification');
 
 // ─── Resident ────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,19 @@ exports.submitReport = async (req, res) => {
     report.submittedAt = new Date();
     await report.save();
 
+    // Notify all admins and reviewers
+    const admins = await User.find({ role: { $in: ['admin', 'reviewer'] } }).select('_id');
+    const io = req.app.get('io');
+    await Promise.all(admins.map(async (admin) => {
+      const notif = await Notification.create({
+        recipient: admin._id,
+        type:      'report_submitted',
+        message:   `${req.user.name} submitted a report for ${report.unit}`,
+        link:      `/admin/reports/${report._id}`,
+      });
+      if (io) io.to(admin._id.toString()).emit('notification', notif);
+    }));
+
     res.json({ message: 'Report submitted successfully', report });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -122,18 +136,60 @@ exports.getMyReport = async (req, res) => {
 
 exports.getMyDashboard = async (req, res) => {
   try {
-    const [submitted, reviewed, drafts, unreadFeedback, recentFeedback] = await Promise.all([
-      WeeklyReport.countDocuments({ resident: req.user._id, status: 'submitted' }),
-      WeeklyReport.countDocuments({ resident: req.user._id, status: 'reviewed' }),
-      WeeklyReport.countDocuments({ resident: req.user._id, status: 'draft' }),
-      WeeklyReport.countDocuments({ resident: req.user._id, status: 'reviewed', feedbackRead: false }),
-      WeeklyReport.find({ resident: req.user._id, status: 'reviewed', adminFeedback: { $ne: '' } })
-        .sort({ reviewedAt: -1 })
-        .limit(5)
-        .select('unit weekStartDate adminFeedback feedbackRead reviewedAt'),
-    ]);
+    const UNITS = WeeklyReport.UNITS || [
+      'EPI', 'Orientation', 'Health Promotion',
+      'Nutrition', 'Port Health', 'Non-Communicable Health',
+    ];
 
-    res.json({ submitted, reviewed, drafts, unreadFeedback, recentFeedback });
+    const [submitted, reviewed, drafts, unreadFeedback, recentFeedback, allActive, recentReports, unitAgg] =
+      await Promise.all([
+        WeeklyReport.countDocuments({ resident: req.user._id, status: 'submitted' }),
+        WeeklyReport.countDocuments({ resident: req.user._id, status: 'reviewed' }),
+        WeeklyReport.countDocuments({ resident: req.user._id, status: 'draft' }),
+        WeeklyReport.countDocuments({ resident: req.user._id, status: 'reviewed', feedbackRead: false }),
+        WeeklyReport.find({ resident: req.user._id, status: 'reviewed', adminFeedback: { $ne: '' } })
+          .sort({ reviewedAt: -1 }).limit(5)
+          .select('unit weekStartDate adminFeedback feedbackRead reviewedAt'),
+        // All submitted/reviewed weeks for streak calculation
+        WeeklyReport.find({ resident: req.user._id, status: { $in: ['submitted', 'reviewed'] } })
+          .sort({ weekStartDate: -1 }).select('weekStartDate'),
+        // Last 6 reports any status for activity feed
+        WeeklyReport.find({ resident: req.user._id })
+          .sort({ updatedAt: -1 }).limit(6)
+          .select('unit weekStartDate status submittedAt reviewedAt updatedAt'),
+        // Unit-level aggregation
+        WeeklyReport.aggregate([
+          { $match: { resident: req.user._id, status: { $in: ['submitted', 'reviewed'] } } },
+          { $group: { _id: '$unit', count: { $sum: 1 } } },
+        ]),
+      ]);
+
+    // ── Streak: consecutive weeks ending at the current or last Monday ──
+    const snapMonday = (d) => {
+      const dt = new Date(d); dt.setHours(0, 0, 0, 0);
+      const dow = dt.getDay();
+      dt.setDate(dt.getDate() + (dow === 0 ? -6 : 1 - dow));
+      return dt.getTime();
+    };
+    const reportWeeks = new Set(allActive.map(r => snapMonday(r.weekStartDate)));
+    let streak = 0;
+    let cursor = snapMonday(new Date());
+    while (reportWeeks.has(cursor)) { streak++; cursor -= 7 * 24 * 60 * 60 * 1000; }
+
+    // ── Units coverage ──
+    const unitsCoverage = UNITS.map(unit => ({
+      unit,
+      count: unitAgg.find(u => u._id === unit)?.count || 0,
+    }));
+
+    res.json({
+      submitted, reviewed, drafts, unreadFeedback,
+      total: submitted + reviewed + drafts,
+      streak,
+      unitsCoverage,
+      recentFeedback,
+      recentReports,
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -233,6 +289,19 @@ exports.reviewReport = async (req, res) => {
     report.reviewedBy = req.user._id;
 
     await report.save();
+
+    // Notify the resident
+    const io = req.app.get('io');
+    const notif = await Notification.create({
+      recipient: report.resident,
+      type:      'report_reviewed',
+      message:   adminFeedback
+        ? `Your ${report.unit} report was reviewed — feedback added`
+        : `Your ${report.unit} report has been reviewed`,
+      link:      `/resident/reports/${report._id}`,
+    });
+    if (io) io.to(report.resident.toString()).emit('notification', notif);
+
     res.json({ message: 'Report reviewed', report });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });

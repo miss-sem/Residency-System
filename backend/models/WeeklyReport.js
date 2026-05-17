@@ -13,6 +13,7 @@ const dayEntrySchema = new mongoose.Schema(
   {
     activities: { type: String, default: '' },
     competenciesAcquired: { type: String, default: '' },
+    additionalNotes: { type: String, default: '' },
   },
   { _id: false }
 );

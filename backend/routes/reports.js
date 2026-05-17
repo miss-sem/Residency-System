@@ -12,7 +12,7 @@ const {
   getReport,
   reviewReport,
 } = require('../controllers/reportController');
-const { protect, adminOnly, residentOnly } = require('../middleware/auth');
+const { protect, adminOnly, adminOrReviewer, residentOnly } = require('../middleware/auth');
 
 // Resident routes
 router.use(protect);
@@ -24,9 +24,11 @@ router.put('/:id', residentOnly, updateReport);
 router.put('/:id/submit', residentOnly, submitReport);
 router.delete('/:id', residentOnly, deleteReport);
 
-// Admin routes
-router.get('/', adminOnly, getAllReports);
-router.get('/:id', adminOnly, getReport);
+// Admin / reviewer read routes
+router.get('/', adminOrReviewer, getAllReports);
+router.get('/:id', adminOrReviewer, getReport);
+
+// Admin-only write route
 router.put('/:id/review', adminOnly, reviewReport);
 
 module.exports = router;

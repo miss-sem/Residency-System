@@ -6,13 +6,12 @@ const formatUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
-  department: user.department,
   createdAt: user.createdAt,
 });
 
 exports.createResident = async (req, res) => {
   try {
-    const { name, email, password, department } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
@@ -23,7 +22,7 @@ exports.createResident = async (req, res) => {
       return res.status(409).json({ message: 'Email already in use' });
     }
 
-    const resident = await User.create({ name, email, password, department, role: 'resident' });
+    const resident = await User.create({ name, email, password, role: 'resident' });
     res.status(201).json({ message: 'Resident created', user: formatUser(resident) });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
@@ -32,16 +31,13 @@ exports.createResident = async (req, res) => {
 
 exports.getAllResidents = async (req, res) => {
   try {
-    const { search, department } = req.query;
+    const { search } = req.query;
     const query = { role: 'resident' };
-
-    if (department) query.department = department;
 
     if (search) {
       query.$or = [
         { name:  { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
-        { department: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -54,16 +50,15 @@ exports.getAllResidents = async (req, res) => {
 
 exports.updateResident = async (req, res) => {
   try {
-    const { name, email, department, password } = req.body;
+    const { name, email, password } = req.body;
     const resident = await User.findOne({ _id: req.params.id, role: 'resident' });
 
     if (!resident) {
       return res.status(404).json({ message: 'Resident not found' });
     }
 
-    if (name) resident.name = name;
-    if (email) resident.email = email;
-    if (department !== undefined) resident.department = department;
+    if (name)     resident.name     = name;
+    if (email)    resident.email    = email;
     if (password) resident.password = password;
 
     await resident.save();
@@ -105,16 +100,6 @@ exports.getDashboardStats = async (req, res) => {
       WeeklyReport.countDocuments({ status: 'reviewed' }),
     ]);
 
-    // Department breakdown — top 6 by submission count
-    const deptBreakdown = await WeeklyReport.aggregate([
-      { $match: { status: { $ne: 'draft' } } },
-      { $lookup: { from: 'users', localField: 'resident', foreignField: '_id', as: 'u' } },
-      { $unwind: '$u' },
-      { $group: { _id: '$u.department', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 6 },
-    ]);
-
     // Weekly submission trend — last 6 weeks in parallel
     const weeklyTrend = await Promise.all(
       Array.from({ length: 6 }, (_, i) => {
@@ -136,7 +121,6 @@ exports.getDashboardStats = async (req, res) => {
       submitted,
       reviewed,
       pendingReview: submitted,
-      deptBreakdown,
       weeklyTrend,
     });
   } catch (err) {
