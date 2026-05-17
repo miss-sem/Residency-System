@@ -32,8 +32,17 @@
 @keyframes authEnterRight{ from { opacity:0; transform:translateX(26px); } to { opacity:1; transform:translateX(0);    } }
 @keyframes authEnterLeft { from { opacity:0; transform:translateX(-26px);} to { opacity:1; transform:translateX(0);    } }
 @keyframes letterIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* Auth left-panel text animations */
+@keyframes authTextIn   { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
+@keyframes authSubIn    { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes authFooterIn { from { opacity:0; } to { opacity:1; } }
+
+.auth-text-enter   { animation: authTextIn   0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.15s both; }
+.auth-sub-enter    { animation: authSubIn    0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.35s both; }
+.auth-footer-enter { animation: authFooterIn 0.8s ease 0.55s both; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-.typewriter-cursor { animation: blink 0.75s step-start infinite; margin-left: 1px; font-weight: 300; color: #D92243; }
+.typewriter-cursor { animation: blink 0.75s step-start infinite; margin-left: 1px; font-weight: 300; color: #2563EB; }
 
 @layer components {
   .btn-primary {

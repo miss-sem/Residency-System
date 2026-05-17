@@ -108,7 +108,7 @@ const ReportHistory = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-100 shadow-card p-4 mb-6 space-y-4">
+      <div className="bg-white border border-gray-100 shadow-card p-4 mb-6 flex flex-wrap items-start gap-x-6 gap-y-3">
 
         {/* Status */}
         <div className="flex flex-wrap items-center gap-3">
@@ -128,6 +128,9 @@ const ReportHistory = () => {
             ))}
           </div>
         </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-gray-100" />
 
         {/* Week */}
         <div className="flex flex-wrap items-center gap-3">

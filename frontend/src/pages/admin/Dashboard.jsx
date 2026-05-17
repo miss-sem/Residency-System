@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, reportAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import NotificationPanel from '../../components/NotificationPanel';
 import UnitBadge from '../../components/UnitBadge';
 import {
   Users, FileText, CheckCircle, Clock,
-  ChevronRight, TrendingUp, PieChart, Building2,
+  ChevronRight, TrendingUp, PieChart, Bell,
 } from 'lucide-react';
 import { formatWeek } from '../../utils/helpers';
 
@@ -32,26 +34,42 @@ const useCountUp = (target, delay = 0) => {
 
 /* ── Stat card ──────────────────────────────────────────────────────────── */
 const COLORS = {
-  primary: { ring: 'bg-primary/10',  text: 'text-primary',    bar: 'bg-primary' },
-  amber:   { ring: 'bg-amber-50',    text: 'text-amber-500',  bar: 'bg-amber-400' },
-  green:   { ring: 'bg-green-50',    text: 'text-green-500',  bar: 'bg-green-500' },
-  blue:    { ring: 'bg-blue-50',     text: 'text-blue-500',   bar: 'bg-blue-500' },
+  primary: {
+    ring: 'bg-primary/10', text: 'text-primary', num: 'text-primary',
+    border: 'border-t-primary', glow: 'hover:shadow-[0_8px_30px_rgba(37,99,235,0.15)]',
+  },
+  amber: {
+    ring: 'bg-amber-50', text: 'text-amber-500', num: 'text-amber-600',
+    border: 'border-t-amber-400', glow: 'hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)]',
+  },
+  green: {
+    ring: 'bg-green-50', text: 'text-green-500', num: 'text-green-600',
+    border: 'border-t-green-400', glow: 'hover:shadow-[0_8px_30px_rgba(22,163,74,0.15)]',
+  },
+  blue: {
+    ring: 'bg-blue-50', text: 'text-blue-500', num: 'text-blue-600',
+    border: 'border-t-blue-400', glow: 'hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)]',
+  },
 };
 
 const StatCard = ({ label, value, icon: Icon, color = 'primary', delay = 0, sub }) => {
   const count = useCountUp(value ?? 0, delay);
   const c = COLORS[color];
   return (
-    <div className="card p-5 animate-slide-up" style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}>
+    <div
+      className={`card p-5 border-t-2 ${c.border} ${c.glow}
+        hover:scale-[1.03] hover:-translate-y-1 transition-all duration-300 cursor-default
+        animate-slide-up`}
+      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-10 h-10 flex items-center justify-center ${c.ring}`}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.ring}`}>
           <Icon size={18} className={c.text} />
         </div>
-        <div className={`h-1 w-10 ${c.bar} opacity-30 self-end`} />
+        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest self-start mt-1">{label}</span>
       </div>
-      <p className="text-3xl font-bold text-gray-800 leading-none mb-1.5 tabular-nums">{count}</p>
-      <p className="text-xs font-semibold text-gray-500">{label}</p>
-      {sub && <p className="text-[10px] text-gray-300 mt-0.5">{sub}</p>}
+      <p className={`text-4xl font-bold leading-none mb-1 tabular-nums ${c.num}`}>{count}</p>
+      {sub && <p className="text-[10px] text-gray-300 mt-1">{sub}</p>}
     </div>
   );
 };
@@ -128,39 +146,49 @@ const DonutRing = ({ reviewed, pending }) => {
   );
 };
 
-/* ── Dept bar ───────────────────────────────────────────────────────────── */
-const DeptBar = ({ dept, count, max, delay }) => {
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => setW((count / max) * 100), 500 + delay);
-    return () => clearTimeout(t);
-  }, [count, max, delay]);
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-600 font-medium truncate">{dept || 'Unassigned'}</span>
-        <span className="text-xs font-bold text-gray-500 flex-shrink-0">{count}</span>
-      </div>
-      <div className="w-full h-2 bg-gray-100 overflow-hidden">
-        <div className="h-full bg-primary transition-all duration-700 ease-out" style={{ width: `${w}%` }} />
-      </div>
-    </div>
-  );
-};
+
+/* ── Notifications widget ───────────────────────────────────────────────── */
+const NotifWidget = ({ unread, onClick }) => (
+  <button
+    onClick={onClick}
+    className="relative w-11 h-11 bg-white border border-gray-200 rounded-full
+      flex items-center justify-center cursor-pointer hover:border-primary/30
+      hover:shadow-md hover:scale-110 transition-all duration-300 group"
+  >
+    <Bell size={17} className="text-primary group-hover:scale-110 transition-transform duration-200" />
+    {unread > 0 && (
+      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-white text-[9px] font-bold
+        rounded-full flex items-center justify-center leading-none animate-pulse">
+        {unread > 9 ? '9+' : unread}
+      </span>
+    )}
+  </button>
+);
 
 /* ── Dashboard ──────────────────────────────────────────────────────────── */
 const AdminDashboard = () => {
   const navigate  = useNavigate();
   const { user }  = useAuth();
+  const { unread } = useNotifications();
   const [stats,   setStats]   = useState(null);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const notifRef = useRef(null);
 
   const hour     = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const dateStr  = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -176,9 +204,6 @@ const AdminDashboard = () => {
 
   const reviewed = stats?.reviewed ?? 0;
   const submitted = stats?.submitted ?? 0;
-  const deptMax = stats?.deptBreakdown?.length
-    ? Math.max(...stats.deptBreakdown.map(d => d.count))
-    : 1;
   const reviewedPct = (reviewed + submitted) > 0
     ? Math.round((reviewed / (reviewed + submitted)) * 100)
     : 0;
@@ -187,12 +212,23 @@ const AdminDashboard = () => {
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
 
       {/* Header */}
-      <div className="mb-8 animate-slide-up">
-        <p className="text-xs text-gray-400 font-medium mb-1">{dateStr}</p>
-        <h1 className="text-2xl font-bold text-gray-800">
-          {greeting}, {user?.name?.split(' ')[0]}
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">Overview of residency programme</p>
+      <div className="relative z-50 flex items-start justify-between mb-8 animate-slide-up">
+        <div>
+          <p className="text-xs text-gray-400 font-medium mb-1">{dateStr}</p>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {greeting}, {user?.name?.split(' ')[0]}
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">Overview of residency programme</p>
+        </div>
+        <div ref={notifRef} className="relative flex-shrink-0">
+          <NotifWidget unread={unread} onClick={() => setShowNotifs(v => !v)} />
+          {showNotifs && (
+            <NotificationPanel
+              onClose={() => setShowNotifs(false)}
+              className="absolute top-full right-0 mt-2 w-80 z-50"
+            />
+          )}
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -260,27 +296,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Bottom row: dept breakdown + pending */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Department breakdown */}
-        <div className="card p-6 animate-slide-up"
-          style={{ animationDelay: '360ms', animationFillMode: 'both' }}>
-          <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-5">
-            <Building2 size={15} className="text-primary" /> Submissions by Department
-          </h2>
-          {stats?.deptBreakdown?.length > 0 ? (
-            <div className="space-y-4">
-              {stats.deptBreakdown.map((d, i) => (
-                <DeptBar key={d._id ?? i} dept={d._id} count={d.count} max={deptMax} delay={i * 80} />
-              ))}
-            </div>
-          ) : (
-            <div className="h-24 flex items-center justify-center text-xs text-gray-300">
-              No submissions yet
-            </div>
-          )}
-        </div>
+      {/* Bottom row: pending reviews (full width) */}
+      <div className="grid grid-cols-1 gap-5">
 
         {/* Pending reviews */}
         <div className="card p-6 animate-slide-up"

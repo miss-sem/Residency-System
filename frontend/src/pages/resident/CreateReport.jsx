@@ -5,7 +5,7 @@ import { reportAPI } from '../../services/api';
 import { UNITS, DAYS, DAY_LABELS, getMondayOfWeek } from '../../utils/helpers';
 import {
   Save, Send, ChevronDown, BookOpen, Check,
-  Calendar, ChevronLeft, ChevronRight,
+  Calendar, ChevronLeft, ChevronRight, CheckCircle,
 } from 'lucide-react';
 
 /* ─── Unit custom dropdown ───────────────────────────────────────────────── */
@@ -216,9 +216,11 @@ const WeekPicker = ({ value, onChange, error }) => {
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 const CreateReport = () => {
   const navigate = useNavigate();
-  const [activeDay, setActiveDay] = useState('monday');
+  const [activeDay, setActiveDay]   = useState('monday');
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting]   = useState(false);
+  const [draftSaved, setDraftSaved]   = useState(false);
+  const reportIdRef = useRef(null); // tracks existing draft ID so we update instead of re-create
 
   const {
     register,
@@ -231,43 +233,62 @@ const CreateReport = () => {
       unit: '',
       weekStartDate: getMondayOfWeek(),
       days: {
-        monday:    { activities: '', competenciesAcquired: '' },
-        tuesday:   { activities: '', competenciesAcquired: '' },
-        wednesday: { activities: '', competenciesAcquired: '' },
-        thursday:  { activities: '', competenciesAcquired: '' },
-        friday:    { activities: '', competenciesAcquired: '' },
+        monday:    { activities: '', competenciesAcquired: '', additionalNotes: '' },
+        tuesday:   { activities: '', competenciesAcquired: '', additionalNotes: '' },
+        wednesday: { activities: '', competenciesAcquired: '', additionalNotes: '' },
+        thursday:  { activities: '', competenciesAcquired: '', additionalNotes: '' },
+        friday:    { activities: '', competenciesAcquired: '', additionalNotes: '' },
       },
       additionalNotes: '',
     },
   });
 
-  const watchUnit      = watch('unit');
-  const watchWeek      = watch('weekStartDate');
-  const watchDays      = watch('days');
-  const dayCompletion  = DAYS.filter(d => watchDays[d]?.activities?.trim()).length;
+  const watchUnit     = watch('unit');
+  const watchWeek     = watch('weekStartDate');
+  const watchDays     = watch('days');
+  const dayCompletion = DAYS.filter(d => watchDays[d]?.activities?.trim()).length;
 
-  const save = async (data, andSubmit = false) => {
+  const saveDraft = handleSubmit(async (data) => {
     setServerError('');
+    setDraftSaved(false);
     try {
-      const { data: res } = await reportAPI.createReport({ ...data, status: 'draft' });
-      if (andSubmit) await reportAPI.submitReport(res.report._id);
-      navigate('/resident/reports');
+      if (reportIdRef.current) {
+        await reportAPI.updateReport(reportIdRef.current, { ...data, status: 'draft' });
+      } else {
+        const { data: res } = await reportAPI.createReport({ ...data, status: 'draft' });
+        reportIdRef.current = res.report._id;
+      }
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000);
     } catch (err) {
       setServerError(err.response?.data?.message || 'Something went wrong');
     }
-  };
+  });
 
-  const onDraft  = handleSubmit((data) => save(data, false));
-  const onSubmit = async (data) => {
+  const onSubmit = handleSubmit(async (data) => {
+    setServerError('');
     setSubmitting(true);
-    await save(data, true);
-    setSubmitting(false);
-  };
+    try {
+      let id = reportIdRef.current;
+      if (id) {
+        await reportAPI.updateReport(id, { ...data, status: 'draft' });
+      } else {
+        const { data: res } = await reportAPI.createReport({ ...data, status: 'draft' });
+        id = res.report._id;
+      }
+      await reportAPI.submitReport(id);
+      navigate('/resident/reports');
+    } catch (err) {
+      setServerError(err.response?.data?.message || 'Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
+  });
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">New Weekly Report</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">Today's Report</h1>
         <p className="text-sm text-gray-400">Fill in your activities for each day, then save or submit</p>
       </div>
 
@@ -278,54 +299,52 @@ const CreateReport = () => {
       )}
 
       <form noValidate>
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 items-start">
+        <div className="space-y-5">
 
-          {/* ── Left col: Meta ── */}
-          <div className="card p-6 animate-slide-up">
-            <div className="space-y-5">
+          {/* ── Top bar: Unit + Week + Progress ── */}
+          <div className="card p-5 flex flex-wrap items-end gap-6 animate-slide-up relative z-10">
 
-              {/* Unit */}
-              <div>
-                <label className="label">Unit</label>
-                <input type="hidden" {...register('unit', { required: 'Please select a unit' })} />
-                <UnitSelect
-                  value={watchUnit}
-                  onChange={(val) => setValue('unit', val, { shouldValidate: true })}
-                  error={!!errors.unit}
-                />
-                {errors.unit && <p className="mt-1 text-xs text-red-500">{errors.unit.message}</p>}
-              </div>
-
-              {/* Week Starting */}
-              <div>
-                <label className="label">Week Starting</label>
-                <input type="hidden" {...register('weekStartDate', { required: 'Week start date is required' })} />
-                <WeekPicker
-                  value={watchWeek}
-                  onChange={(val) => setValue('weekStartDate', val, { shouldValidate: true })}
-                  error={!!errors.weekStartDate}
-                />
-                {errors.weekStartDate && <p className="mt-1 text-xs text-red-500">{errors.weekStartDate.message}</p>}
-              </div>
-
-              {/* Progress */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs text-gray-400 font-medium">Days filled</span>
-                  <span className="text-xs font-semibold text-gray-600">{dayCompletion} / 5</span>
-                </div>
-                <div className="w-full h-1.5 bg-gray-100 overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-500"
-                    style={{ width: `${(dayCompletion / 5) * 100}%` }}
-                  />
-                </div>
-              </div>
-
+            {/* Unit */}
+            <div className="min-w-[200px] flex-1">
+              <label className="label">Unit</label>
+              <input type="hidden" {...register('unit', { required: 'Please select a unit' })} />
+              <UnitSelect
+                value={watchUnit}
+                onChange={(val) => setValue('unit', val, { shouldValidate: true })}
+                error={!!errors.unit}
+              />
+              {errors.unit && <p className="mt-1 text-xs text-red-500">{errors.unit.message}</p>}
             </div>
+
+            {/* Week Starting */}
+            <div className="min-w-[220px] flex-1">
+              <label className="label">Week Starting</label>
+              <input type="hidden" {...register('weekStartDate', { required: 'Week start date is required' })} />
+              <WeekPicker
+                value={watchWeek}
+                onChange={(val) => setValue('weekStartDate', val, { shouldValidate: true })}
+                error={!!errors.weekStartDate}
+              />
+              {errors.weekStartDate && <p className="mt-1 text-xs text-red-500">{errors.weekStartDate.message}</p>}
+            </div>
+
+            {/* Progress */}
+            <div className="min-w-[160px] flex-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs text-gray-400 font-medium">Days filled</span>
+                <span className="text-xs font-semibold text-gray-600">{dayCompletion} / 5</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-500"
+                  style={{ width: `${(dayCompletion / 5) * 100}%` }}
+                />
+              </div>
+            </div>
+
           </div>
 
-          {/* ── Right col: Day tabs + notes + actions ── */}
+          {/* ── Full-width: Day tabs + notes + actions ── */}
           <div
             className="card overflow-hidden animate-slide-up"
             style={{ animationDelay: '40ms', animationFillMode: 'both' }}
@@ -374,19 +393,36 @@ const CreateReport = () => {
                 <textarea
                   className="textarea"
                   rows={3}
-                  placeholder="Any additional observations or remarks for the week..."
-                  {...register('additionalNotes')}
+                  placeholder="Any additional observations or remarks for today..."
+                  {...register(`days.${activeDay}.additionalNotes`)}
                 />
               </div>
 
+              {activeDay === 'friday' && (
+                <div className="border-t border-dashed border-gray-200 pt-5">
+                  <label className="label flex items-center gap-1.5"><BookOpen size={12} /> Weekly Summary / Additional Notes</label>
+                  <textarea
+                    className="textarea"
+                    rows={4}
+                    placeholder="Any overall observations or remarks for the entire week..."
+                    {...register('additionalNotes')}
+                  />
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center gap-3 justify-end pt-1">
-                <button type="button" onClick={onDraft} disabled={isSubmitting || submitting} className="btn-outline">
+                {draftSaved && (
+                  <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium animate-fade-in">
+                    <CheckCircle size={13} /> Draft saved — you can continue editing
+                  </span>
+                )}
+                <button type="button" onClick={saveDraft} disabled={isSubmitting || submitting} className="btn-outline">
                   {isSubmitting && !submitting
                     ? <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                     : <Save size={15} />}
                   Save Draft
                 </button>
-                <button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting || submitting} className="btn-primary">
+                <button type="button" onClick={onSubmit} disabled={isSubmitting || submitting} className="btn-primary">
                   {submitting
                     ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     : <Send size={15} />}
@@ -396,7 +432,7 @@ const CreateReport = () => {
             </div>
           </div>
 
-        </div>
+        </div>{/* end space-y-5 */}
       </form>
     </div>
   );

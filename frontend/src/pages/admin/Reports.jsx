@@ -8,7 +8,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { ClipboardList, ChevronRight, Search, X, Calendar } from 'lucide-react';
 import { HiOutlineDocumentText, HiOutlineClock, HiOutlineCheckCircle } from 'react-icons/hi';
 import Select from '../../components/Select';
-import { formatWeek, getMondayOfWeek, DEPARTMENTS, UNITS } from '../../utils/helpers';
+import { formatWeek, getMondayOfWeek, UNITS } from '../../utils/helpers';
 
 const STATUS_FILTERS = ['all', 'pending review', 'reviewed'];
 
@@ -30,11 +30,10 @@ const StatCard = ({ label, value, icon: Icon }) => (
   </div>
 );
 
-const buildParams = (status, department, unit, weekPreset, customFrom, customTo, search) => {
+const buildParams = (status, unit, weekPreset, customFrom, customTo, search) => {
   const p = {};
   if (status !== 'all') p.status = status === 'pending review' ? 'submitted' : status;
-  if (department)        p.department = department;
-  if (unit)              p.unit       = unit;
+  if (unit)              p.unit   = unit;
   if (search)            p.search     = search;
   if (weekPreset === 'this') {
     const mon = getMondayOfWeek();
@@ -52,7 +51,6 @@ const Reports = () => {
 
   const [stats, setStats]           = useState(null);
   const [status,     setStatus]     = useState('all');
-  const [department, setDepartment] = useState('');
   const [unit,       setUnit]       = useState('');
   const [weekPreset, setWeekPreset] = useState('all');
   const [customFrom, setCustomFrom] = useState('');
@@ -75,11 +73,11 @@ const Reports = () => {
 
   useEffect(() => {
     if (weekPreset === 'custom') return;
-    doFetch(buildParams(status, department, unit, weekPreset, customFrom, customTo, search));
-  }, [status, department, unit, weekPreset, search]);
+    doFetch(buildParams(status, unit, weekPreset, customFrom, customTo, search));
+  }, [status, unit, weekPreset, search]);
 
   const handleApplyCustom = () =>
-    doFetch(buildParams(status, department, unit, 'custom', customFrom, customTo, search));
+    doFetch(buildParams(status, unit, 'custom', customFrom, customTo, search));
 
   const handleSearch = () => setSearch(searchInput);
 
@@ -98,12 +96,12 @@ const Reports = () => {
   };
 
   const clearFilters = () => {
-    setStatus('all'); setDepartment(''); setUnit('');
+    setStatus('all'); setUnit('');
     setWeekPreset('all'); setCustomFrom(''); setCustomTo('');
     setSearch(''); setSearchInput('');
   };
 
-  const isFiltered = status !== 'all' || department || unit || weekPreset !== 'all' || search;
+  const isFiltered = status !== 'all' || unit || weekPreset !== 'all' || search;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -111,7 +109,7 @@ const Reports = () => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-1">All Reports</h1>
-        <p className="text-sm text-gray-400">Review and manage resident submissions</p>
+        <p className="text-sm text-gray-400">Review and manage student submissions</p>
       </div>
 
       {/* Stats */}
@@ -121,40 +119,70 @@ const Reports = () => {
         <StatCard label="Reviewed"       value={stats?.reviewed}     icon={HiOutlineCheckCircle} />
       </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-gray-100 shadow-card p-4 mb-6 space-y-3">
+      {/* Filters — single row */}
+      <div className="bg-white border border-gray-100 shadow-card px-4 py-3 mb-6">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
 
-        {/* Row 1: Search + Week + Clear */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Search input */}
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          {/* Search */}
+          <div className="relative min-w-[200px] flex-shrink-0">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Search by name, email or department..."
-              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 focus:outline-none focus:border-primary text-gray-700 placeholder-gray-300"
+              placeholder="Search student..."
+              className="w-full pl-8 pr-7 py-2 text-xs border border-gray-200 focus:outline-none focus:border-primary text-gray-700 placeholder-gray-300"
             />
             {searchInput && (
               <button onClick={handleClearSearch} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <X size={12} />
+                <X size={11} />
               </button>
             )}
           </div>
           <button onClick={handleSearch}
-            className="px-4 py-2 text-xs font-semibold bg-primary text-white border border-primary hover:bg-primary/90 transition-all">
+            className="px-3 py-2 text-xs font-semibold bg-primary text-white hover:bg-primary/90 transition-all flex-shrink-0">
             Search
           </button>
 
-          {/* Divider */}
-          <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
+          <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
 
-          {/* Week filter */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1 flex-shrink-0">
-              <Calendar size={11} /> Week
+          {/* Status */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</span>
+            <div className="flex gap-1">
+              {STATUS_FILTERS.map(f => (
+                <button key={f} onClick={() => setStatus(f)}
+                  className={`px-3 py-1.5 text-xs font-semibold capitalize border transition-all duration-200
+                    ${status === f
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-primary hover:text-primary'}`}>
+                  {f === 'all' ? 'All' : f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
+
+          {/* Unit */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Unit</span>
+            <div className="min-w-[160px]">
+              <Select
+                options={['All units', ...UNITS]}
+                value={unit || 'All units'}
+                onChange={v => setUnit(v === 'All units' ? '' : v)}
+              />
+            </div>
+          </div>
+
+          <div className="h-5 w-px bg-gray-200 flex-shrink-0" />
+
+          {/* Week */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+              <Calendar size={10} /> Week
             </span>
             <div className="flex gap-1">
               {[{ label: 'All time', value: 'all' }, { label: 'This week', value: 'this' }, { label: 'Custom', value: 'custom' }].map(p => (
@@ -167,68 +195,28 @@ const Reports = () => {
                 </button>
               ))}
             </div>
-
-            {weekPreset === 'custom' && (
-              <div className="flex flex-wrap items-center gap-2">
-                <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                  className="border border-gray-200 px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-primary" />
-                <span className="text-gray-400 text-xs">to</span>
-                <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                  className="border border-gray-200 px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-primary" />
-                <button onClick={handleApplyCustom}
-                  className="px-3 py-1.5 text-xs font-semibold bg-primary text-white border border-primary hover:bg-primary/90 transition-all">
-                  Apply
-                </button>
-              </div>
-            )}
           </div>
+
+          {weekPreset === 'custom' && (
+            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+              <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
+                className="border border-gray-200 px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-primary" />
+              <span className="text-gray-400 text-xs">to</span>
+              <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
+                className="border border-gray-200 px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-primary" />
+              <button onClick={handleApplyCustom}
+                className="px-3 py-1.5 text-xs font-semibold bg-primary text-white border border-primary hover:bg-primary/90 transition-all">
+                Apply
+              </button>
+            </div>
+          )}
 
           {isFiltered && (
             <button onClick={clearFilters}
-              className="ml-auto px-3 py-2 text-xs font-semibold border border-gray-200 text-gray-500 hover:border-primary hover:text-primary transition-all">
+              className="ml-auto px-3 py-1.5 text-xs font-semibold border border-gray-200 text-gray-500 hover:border-primary hover:text-primary transition-all flex-shrink-0">
               Clear all
             </button>
           )}
-        </div>
-
-        {/* Row 2: Status */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest w-24 flex-shrink-0">Status</span>
-          <div className="flex flex-1 gap-1">
-            {STATUS_FILTERS.map(f => (
-              <button key={f} onClick={() => setStatus(f)}
-                className={`flex-1 py-2 text-xs font-semibold capitalize border transition-all duration-200
-                  ${status === f
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-primary hover:text-primary'}`}>
-                {f === 'all' ? 'All' : f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Row 3: Department + Unit */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest w-24 flex-shrink-0">Department</span>
-            <div className="flex-1 sm:flex-none sm:min-w-[220px]">
-              <Select
-                options={['All departments', ...DEPARTMENTS]}
-                value={department || 'All departments'}
-                onChange={v => setDepartment(v === 'All departments' ? '' : v)}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest w-24 flex-shrink-0 sm:w-auto">Unit</span>
-            <div className="flex-1 sm:flex-none sm:min-w-[180px]">
-              <Select
-                options={['All units', ...UNITS]}
-                value={unit || 'All units'}
-                onChange={v => setUnit(v === 'All units' ? '' : v)}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -251,8 +239,7 @@ const Reports = () => {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/60">
                   <th className="w-1"></th>
-                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-left">Resident</th>
-                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-left">Department</th>
+                  <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-left">Student</th>
                   <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-left">Unit</th>
                   <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-left">Week</th>
                   <th className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wide text-left">Submitted</th>
@@ -280,7 +267,6 @@ const Reports = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-sm text-gray-600">{r.resident?.department || <span className="text-gray-300">—</span>}</td>
                     <td className="px-5 py-4"><UnitBadge unit={r.unit} /></td>
                     <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">{formatWeek(r.weekStartDate)}</td>
                     <td className="px-5 py-4 text-xs text-gray-400 whitespace-nowrap">

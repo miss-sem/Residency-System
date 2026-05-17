@@ -7,7 +7,7 @@ const AppLayout = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
+    <div className="flex h-screen overflow-hidden bg-white">
 
       {/* Mobile overlay */}
       {open && (
@@ -37,8 +37,10 @@ const AppLayout = () => {
           >
             <Menu size={20} />
           </button>
-          <img src="/ghs-logo.png" alt="GHS Logo" className="h-8 w-8 object-contain" />
-          <span className="text-sm font-bold text-gray-800">Residency System</span>
+          <div className="w-7 h-7 bg-primary flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-xs">LB</span>
+          </div>
+          <span className="text-sm font-bold text-gray-800">LogBook System</span>
         </header>
 
         <main className="flex-1 overflow-y-auto">

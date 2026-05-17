@@ -54,4 +54,28 @@ export const reportAPI = {
   reviewReport: (id, data)  => api.put(`/reports/${id}/review`, data),
 };
 
+export const messageAPI = {
+  getConversations: ()           => api.get('/messages/conversations'),
+  getMessages:      (userId)     => api.get(`/messages/${userId}`),
+  sendMessage:      (data)       => api.post('/messages', data),
+  getUnreadCount:   ()           => api.get('/messages/unread/count'),
+  getAdminContact:  ()           => api.get('/messages/admin-contact'),
+};
+
+export const notifAPI = {
+  getAll:      ()   => api.get('/notifications'),
+  markAllRead: ()   => api.patch('/notifications/read-all'),
+  markOneRead: (id) => api.patch(`/notifications/${id}/read`),
+};
+
+export const authExtAPI = {
+  forgotPassword:  (email)           => api.post('/auth/forgot-password',  { email }),
+  resetPassword:   (token, password) => api.post('/auth/reset-password',   { token, password }),
+  changePassword:  (data)            => api.post('/auth/change-password',   data),
+  createReviewer:  (data)            => api.post('/auth/create-reviewer',   data),
+  inviteReviewer:  (data)            => api.post('/auth/invite-reviewer',   data),
+  reviewerAccess:  (token)           => api.post('/auth/reviewer-access',   { token }),
+  acceptInvite:    (data)            => api.post('/auth/accept-invite',     data),
+};
+
 export default api;

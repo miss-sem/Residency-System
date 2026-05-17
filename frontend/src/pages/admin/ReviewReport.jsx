@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { reportAPI } from '../../services/api';
+import { reportAPI, messageAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
 import UnitBadge from '../../components/UnitBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -9,12 +10,19 @@ import { DAYS, DAY_LABELS, formatDate, formatWeek } from '../../utils/helpers';
 import { ArrowLeft, Calendar, CheckCircle, MessageSquare, Send } from 'lucide-react';
 
 const ReviewReport = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [report, setReport]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeDay, setActiveDay] = useState('monday');
-  const [reviewed, setReviewed]   = useState(false);
+  const { id }     = useParams();
+  const navigate   = useNavigate();
+  const { user }   = useAuth();
+  const isReviewer = user?.role === 'reviewer';
+
+  const [report,       setReport]       = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [activeDay,    setActiveDay]    = useState('monday');
+  const [reviewed,     setReviewed]     = useState(false);
+  const [adminContact, setAdminContact] = useState(null);
+  const [comment,      setComment]      = useState('');
+  const [commentSent,  setCommentSent]  = useState(false);
+  const [sending,      setSending]      = useState(false);
 
   const {
     register,
@@ -23,10 +31,13 @@ const ReviewReport = () => {
   } = useForm({ defaultValues: { adminFeedback: '' } });
 
   useEffect(() => {
-    reportAPI.getReport(id)
-      .then(({ data }) => {
-        setReport(data.report);
-        if (data.report.status === 'reviewed') setReviewed(true);
+    const fetches = [reportAPI.getReport(id)];
+    if (isReviewer) fetches.push(messageAPI.getAdminContact());
+    Promise.all(fetches)
+      .then(([rep, contact]) => {
+        setReport(rep.data.report);
+        if (rep.data.report.status === 'reviewed') setReviewed(true);
+        if (contact) setAdminContact(contact.data.user);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -35,6 +46,18 @@ const ReviewReport = () => {
     await reportAPI.reviewReport(id, { adminFeedback });
     setReviewed(true);
     setReport(r => ({ ...r, status: 'reviewed', adminFeedback, reviewedAt: new Date() }));
+  };
+
+  const sendComment = async () => {
+    if (!comment.trim() || !adminContact) return;
+    setSending(true);
+    try {
+      await messageAPI.sendMessage({ receiverId: adminContact._id, content: comment.trim(), reportId: id });
+      setCommentSent(true);
+      setComment('');
+    } finally {
+      setSending(false);
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -110,41 +133,88 @@ const ReviewReport = () => {
         </div>
       )}
 
-      {/* Feedback form */}
-      <div className="card p-6 animate-slide-up" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-2 mb-4">
-          <MessageSquare size={15} className="text-primary" />
-          <h2 className="text-sm font-bold text-gray-800">
-            {reviewed ? 'Feedback Submitted' : 'Add Feedback & Mark as Reviewed'}
-          </h2>
-        </div>
+      {/* Admin feedback (visible to both, read-only for reviewer) */}
+      {(reviewed || !isReviewer) && (
+        <div className="card p-6 animate-slide-up" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare size={15} className="text-primary" />
+            <h2 className="text-sm font-bold text-gray-800">
+              {reviewed ? 'Admin Feedback' : 'Add Feedback & Mark as Reviewed'}
+            </h2>
+          </div>
 
-        {reviewed ? (
-          <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4">
-            {report.adminFeedback || <span className="italic text-gray-400">No feedback provided</span>}
+          {reviewed ? (
+            <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4">
+              {report.adminFeedback || <span className="italic text-gray-400">No feedback provided</span>}
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              <textarea
+                className={`textarea mb-1 ${errors.adminFeedback ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : ''}`}
+                rows={4}
+                placeholder="Write your feedback for the resident..."
+                {...register('adminFeedback', { required: 'Feedback is required before marking as reviewed' })}
+              />
+              {errors.adminFeedback && (
+                <p className="text-xs text-red-500 mb-3">{errors.adminFeedback.message}</p>
+              )}
+              <div className="flex justify-end mt-4">
+                <button type="submit" disabled={isSubmitting} className="btn-primary">
+                  {isSubmitting
+                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <Send size={15} />}
+                  Submit & Mark Reviewed
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+
+      {/* Reviewer comment box */}
+      {isReviewer && (
+        <div className="card p-6 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare size={15} className="text-primary" />
+            <h2 className="text-sm font-bold text-gray-800">Leave a Comment for Admin</h2>
+          </div>
+          <p className="text-xs text-gray-400 mb-3">
+            Your comment will be sent to the admin via chat and they will be notified.
           </p>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <textarea
-              className={`textarea mb-1 ${errors.adminFeedback ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : ''}`}
-              rows={4}
-              placeholder="Write your feedback for the resident..."
-              {...register('adminFeedback', { required: 'Feedback is required before marking as reviewed' })}
-            />
-            {errors.adminFeedback && (
-              <p className="text-xs text-red-500 mb-3">{errors.adminFeedback.message}</p>
-            )}
-            <div className="flex justify-end mt-4">
-              <button type="submit" disabled={isSubmitting} className="btn-primary">
-                {isSubmitting
-                  ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  : <Send size={15} />}
-                Submit & Mark Reviewed
+
+          {commentSent ? (
+            <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-100 animate-fade-in">
+              <CheckCircle size={15} className="text-green-500 flex-shrink-0" />
+              <p className="text-sm text-green-700">Comment sent to admin.</p>
+              <button onClick={() => setCommentSent(false)}
+                className="ml-auto text-xs text-gray-400 hover:text-primary transition-colors">
+                Send another
               </button>
             </div>
-          </form>
-        )}
-      </div>
+          ) : (
+            <>
+              <textarea
+                className="textarea mb-3"
+                rows={4}
+                placeholder={`Comment on this ${report.unit} report…`}
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+              />
+              <div className="flex justify-end">
+                <button
+                  onClick={sendComment}
+                  disabled={sending || !comment.trim()}
+                  className="btn-primary">
+                  {sending
+                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <Send size={15} />}
+                  Send Comment
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

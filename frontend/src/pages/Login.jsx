@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 
-const WORDS = ['Welcome.', 'Hello!'];
+const WORDS = ['Welcome!', 'Hello!', 'Log in to continue!'];
 
 const useTypewriter = () => {
   const [text, setText]     = useState('');
@@ -38,7 +38,6 @@ const useTypewriter = () => {
 const Login = () => {
   const { login } = useAuth();
   const navigate  = useNavigate();
-  const [showPwd, setShowPwd]         = useState(false);
   const [serverError, setServerError] = useState('');
   const heading = useTypewriter();
 
@@ -49,7 +48,9 @@ const Login = () => {
     setServerError('');
     try {
       const user = await login(email, password);
-      navigate(user.role === 'admin' ? '/admin/dashboard' : '/resident/reports/new', { replace: true });
+      if (user.role === 'admin' || user.role === 'reviewer')
+                                         navigate('/admin/dashboard',    { replace: true });
+      else if (user.role === 'resident') navigate('/resident/dashboard', { replace: true });
     } catch (err) {
       setServerError(
         err.response?.status === 401
@@ -69,9 +70,9 @@ const Login = () => {
       </div>
 
       {serverError && (
-        <div className="mb-5 flex items-center gap-2.5 px-4 py-3 bg-red-50 border border-red-100 animate-fade-in">
-          <div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0" />
-          <p className="text-sm text-red-600">{serverError}</p>
+        <div className="mb-5 flex items-center gap-2.5 px-4 py-3 bg-blue-50 border border-blue-100 animate-fade-in">
+          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+          <p className="text-sm text-blue-600">{serverError}</p>
         </div>
       )}
 
@@ -87,7 +88,7 @@ const Login = () => {
               className={`w-full pl-10 pr-4 py-3 text-sm bg-white border text-gray-800 placeholder-gray-300
                 transition-all duration-200 focus:outline-none focus:ring-2
                 ${errors.email || serverError
-                  ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                  ? 'border-blue-300 focus:border-blue-400 focus:ring-blue-100'
                   : 'border-gray-200 focus:border-primary focus:ring-primary/15'}`}
               {...register('email', {
                 required: 'Email is required',
@@ -95,33 +96,32 @@ const Login = () => {
               })}
             />
           </div>
-          {errors.email && <p className="mt-1.5 text-xs text-red-500">{errors.email.message}</p>}
+          {errors.email && <p className="mt-1.5 text-xs text-blue-500">{errors.email.message}</p>}
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-2">Password</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-xs font-semibold text-gray-600">Password</label>
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot password?</Link>
+          </div>
           <div className="relative">
             <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
-              type={showPwd ? 'text' : 'password'}
+              type="password"
               autoComplete="new-password"
               placeholder="••••••••"
-              className={`w-full pl-10 pr-11 py-3 text-sm bg-white border text-gray-800 placeholder-gray-300
+              className={`w-full pl-10 pr-4 py-3 text-sm bg-white border text-gray-800 placeholder-gray-300
                 transition-all duration-200 focus:outline-none focus:ring-2
                 ${errors.password || serverError
-                  ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                  ? 'border-blue-300 focus:border-blue-400 focus:ring-blue-100'
                   : 'border-gray-200 focus:border-primary focus:ring-primary/15'}`}
               {...register('password', {
                 required: 'Password is required',
                 minLength: { value: 6, message: 'At least 6 characters' },
               })}
             />
-            <button type="button" onClick={() => setShowPwd(!showPwd)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-0.5">
-              {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
           </div>
-          {errors.password && <p className="mt-1.5 text-xs text-red-500">{errors.password.message}</p>}
+          {errors.password && <p className="mt-1.5 text-xs text-blue-500">{errors.password.message}</p>}
         </div>
 
         <button type="submit" disabled={isSubmitting}

@@ -1,9 +1,9 @@
 import {
-  Document, Page, View, Text, Image, StyleSheet, Font,
+  Document, Page, View, Text, StyleSheet, Font,
 } from '@react-pdf/renderer';
 import { DAYS, DAY_LABELS } from '../utils/helpers';
 
-const PRIMARY  = '#D92243';
+const PRIMARY  = '#2563EB';
 const DARK     = '#1F2937';
 const GRAY     = '#6B7280';
 const LIGHT    = '#F3F4F6';
@@ -15,8 +15,7 @@ const s = StyleSheet.create({
   page: { fontFamily: 'Helvetica', fontSize: 9, color: DARK, paddingHorizontal: 36, paddingVertical: 32, backgroundColor: '#fff' },
 
   /* Header */
-  header:     { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 14 },
-  logo:       { width: 50, height: 50, objectFit: 'contain' },
+  header:     { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   headerText: { flex: 1 },
   orgName:    { fontSize: 15, fontFamily: 'Helvetica-Bold', color: PRIMARY, letterSpacing: 1 },
   docTitle:   { fontSize: 9, color: GRAY, marginTop: 2, letterSpacing: 0.5 },
@@ -76,10 +75,6 @@ const fmtWeek = (iso) => {
   return `${start.toLocaleDateString('en-GB', opts)} – ${end.toLocaleDateString('en-GB', { ...opts, year: 'numeric' })}`;
 };
 
-const logoUrl = typeof window !== 'undefined'
-  ? `${window.location.origin}/ghs-logo.png`
-  : '/ghs-logo.png';
-
 /* ── Single report page ───────────────────────────────────────────────────── */
 const ReportPage = ({ report, pageNumber, totalPages }) => {
   const st = statusStyle(report.status);
@@ -89,10 +84,9 @@ const ReportPage = ({ report, pageNumber, totalPages }) => {
     <Page size="A4" style={s.page}>
       {/* Header */}
       <View style={s.header}>
-        <Image src={logoUrl} style={s.logo} />
         <View style={s.headerText}>
-          <Text style={s.orgName}>GHANA HEALTH SERVICE</Text>
-          <Text style={s.docTitle}>RESIDENCY PROGRAMME — WEEKLY ACTIVITY LOG</Text>
+          <Text style={s.orgName}>LOGBOOK SYSTEM</Text>
+          <Text style={s.docTitle}>WEEKLY ACTIVITY LOG</Text>
         </View>
       </View>
       <View style={s.redLine} />
@@ -100,12 +94,8 @@ const ReportPage = ({ report, pageNumber, totalPages }) => {
       {/* Resident info */}
       <View style={s.infoGrid}>
         <View style={s.infoCell}>
-          <Text style={s.infoLabel}>Resident Name</Text>
+          <Text style={s.infoLabel}>Student Name</Text>
           <Text style={s.infoValue}>{resident.name ?? '—'}</Text>
-        </View>
-        <View style={s.infoCell}>
-          <Text style={s.infoLabel}>Department</Text>
-          <Text style={s.infoValue}>{resident.department ?? '—'}</Text>
         </View>
         <View style={s.infoCell}>
           <Text style={s.infoLabel}>Email</Text>
@@ -160,6 +150,15 @@ const ReportPage = ({ report, pageNumber, totalPages }) => {
                   ? <Text style={s.fieldValue}>{entry.competenciesAcquired}</Text>
                   : <Text style={s.fieldEmpty}>None recorded</Text>}
               </View>
+              {entry.additionalNotes ? (
+                <>
+                  <View style={s.divider} />
+                  <View>
+                    <Text style={s.fieldLabel}>Additional Notes</Text>
+                    <Text style={s.fieldValue}>{entry.additionalNotes}</Text>
+                  </View>
+                </>
+              ) : null}
             </View>
           </View>
         );
@@ -196,7 +195,7 @@ const ReportPage = ({ report, pageNumber, totalPages }) => {
 
       {/* Footer */}
       <View style={s.footer} fixed>
-        <Text style={s.footerText}>GHS Residency Programme — Confidential</Text>
+        <Text style={s.footerText}>LogBook System — Confidential</Text>
         <Text style={s.footerText}>
           Page {pageNumber} of {totalPages}
         </Text>
@@ -214,9 +213,96 @@ export const SingleReportDoc = ({ report }) => (
 
 /* ── Multi-report document ────────────────────────────────────────────────── */
 export const MultiReportDoc = ({ reports }) => (
-  <Document title="GHS Residency — Weekly Reports">
+  <Document title="LogBook System — Weekly Reports">
     {reports.map((r, i) => (
       <ReportPage key={r._id} report={r} pageNumber={i + 1} totalPages={reports.length} />
     ))}
+  </Document>
+);
+
+/* ── Single-day document ──────────────────────────────────────────────────── */
+const DayPage = ({ report, day }) => {
+  const resident = report.resident ?? {};
+  const entry    = report.days?.[day] ?? {};
+
+  return (
+    <Page size="A4" style={s.page}>
+      <View style={s.header}>
+        <View style={s.headerText}>
+          <Text style={s.orgName}>LOGBOOK SYSTEM</Text>
+          <Text style={s.docTitle}>DAILY ACTIVITY LOG</Text>
+        </View>
+      </View>
+      <View style={s.redLine} />
+
+      <View style={s.infoGrid}>
+        <View style={s.infoCell}>
+          <Text style={s.infoLabel}>Student Name</Text>
+          <Text style={s.infoValue}>{resident.name ?? '—'}</Text>
+        </View>
+        <View style={s.infoCell}>
+          <Text style={s.infoLabel}>Clinical Unit</Text>
+          <Text style={s.infoValue}>{report.unit ?? '—'}</Text>
+        </View>
+        <View style={s.infoCell}>
+          <Text style={s.infoLabel}>Week</Text>
+          <Text style={s.infoValue}>{fmtWeek(report.weekStartDate)}</Text>
+        </View>
+        <View style={s.infoCell}>
+          <Text style={s.infoLabel}>Day</Text>
+          <Text style={s.infoValue}>{DAY_LABELS[day] ?? day}</Text>
+        </View>
+        <View style={s.infoCell}>
+          <Text style={s.infoLabel}>Email</Text>
+          <Text style={s.infoValue}>{resident.email ?? '—'}</Text>
+        </View>
+      </View>
+
+      <View style={s.sectionHeader}>
+        <Text style={s.sectionTitle}>Activity Log — {DAY_LABELS[day] ?? day}</Text>
+        <View style={s.sectionLine} />
+      </View>
+
+      <View style={[s.dayBlock, { marginBottom: 14 }]}>
+        <View style={s.dayHeader}>
+          <Text style={s.dayName}>{DAY_LABELS[day] ?? day}</Text>
+        </View>
+        <View style={s.dayBody}>
+          <View>
+            <Text style={s.fieldLabel}>Activities</Text>
+            {entry.activities
+              ? <Text style={s.fieldValue}>{entry.activities}</Text>
+              : <Text style={s.fieldEmpty}>No activities recorded</Text>}
+          </View>
+          <View style={s.divider} />
+          <View>
+            <Text style={s.fieldLabel}>Competencies Acquired</Text>
+            {entry.competenciesAcquired
+              ? <Text style={s.fieldValue}>{entry.competenciesAcquired}</Text>
+              : <Text style={s.fieldEmpty}>None recorded</Text>}
+          </View>
+          {entry.additionalNotes ? (
+            <>
+              <View style={s.divider} />
+              <View>
+                <Text style={s.fieldLabel}>Additional Notes</Text>
+                <Text style={s.fieldValue}>{entry.additionalNotes}</Text>
+              </View>
+            </>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={s.footer} fixed>
+        <Text style={s.footerText}>LogBook System — Confidential</Text>
+        <Text style={s.footerText}>Daily Report · {DAY_LABELS[day] ?? day}</Text>
+      </View>
+    </Page>
+  );
+};
+
+export const SingleDayDoc = ({ report, day }) => (
+  <Document title={`Daily Log — ${DAY_LABELS[day] ?? day}`}>
+    <DayPage report={report} day={day} />
   </Document>
 );
