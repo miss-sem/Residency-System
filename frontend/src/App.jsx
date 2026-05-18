@@ -29,7 +29,7 @@ import ReviewerAccess  from './pages/ReviewerAccess';
 
 const App = () => (
   <AuthProvider>
-    <SocketProvider>
+    <SocketProvider> 
       <NotificationProvider>
         <BrowserRouter>
           <Routes>

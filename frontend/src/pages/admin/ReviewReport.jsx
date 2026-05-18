@@ -221,13 +221,13 @@ const ReviewReport = () => {
             <h2 className="text-sm font-bold text-gray-800">Leave a Comment for Admin</h2>
           </div>
           <p className="text-xs text-gray-400 mb-3">
-            Your comment will be sent to the admin via chat and they will be notified.
+            Your comment will be attached to this report and visible to admin on the report page.
           </p>
 
           {commentSent ? (
             <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-100 animate-fade-in">
               <CheckCircle size={15} className="text-green-500 flex-shrink-0" />
-              <p className="text-sm text-green-700">Comment sent to admin.</p>
+              <p className="text-sm text-green-700">Comment added to report.</p>
               <button onClick={() => setCommentSent(false)}
                 className="ml-auto text-xs text-gray-400 hover:text-primary transition-colors">
                 Send another
