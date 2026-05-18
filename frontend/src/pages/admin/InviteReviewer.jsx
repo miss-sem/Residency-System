@@ -98,7 +98,7 @@ const InviteReviewer = () => {
             )}
 
             <div className="flex justify-end gap-3 pt-2">
-              <button type="button" onClick={() => navigate('/admin/residents')} className="btn-outline">Cancel</button>
+              <button type="button" onClick={() => navigate('/admin/dashboard')} className="btn-outline">Cancel</button>
               <button type="submit" disabled={isSubmitting} className="btn-primary">
                 {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
                 Send Invitation
