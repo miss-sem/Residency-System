@@ -204,7 +204,8 @@ exports.inviteReviewer = async (req, res) => {
 
     res.status(201).json({ message: 'Invitation sent', user: formatUser(user) });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error('[inviteReviewer]', err.message);
+    res.status(500).json({ message: err.message || 'Failed to send invitation' });
   }
 };
 
