@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 
 const residentLinks = [
-  { to: '/resident/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/resident/reports/new', icon: Plus,            label: 'Create' },
+  { to: '/resident/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/resident/reports',     icon: ClipboardList,   label: 'My Reports' },
   { to: '/resident/generate',    icon: Download,        label: 'Generate Report' },
   { to: '/resident/calendar',    icon: Calendar,        label: 'Calendar' },
@@ -47,7 +47,7 @@ const Sidebar = ({ onClose }) => {
           <div className="w-8 h-8 bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-xs">LB</span>
           </div>
-          <p className="text-sm font-bold text-gray-800 leading-tight">LogBook System</p>
+          <p className="text-sm font-bold text-gray-800 leading-tight">LogBook</p>
         </div>
         {onClose && (
           <button onClick={onClose} className="lg:hidden p-1 text-gray-400 hover:text-gray-700 transition-colors">

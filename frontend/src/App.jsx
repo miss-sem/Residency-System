@@ -44,9 +44,10 @@ const App = () => (
             {/* Resident routes */}
             <Route element={<ProtectedRoute role="resident"><AppLayout /></ProtectedRoute>}>
               <Route path="/resident/dashboard"   element={<ResidentDashboard />} />
-              <Route path="/resident/reports/new" element={<CreateReport />} />
-              <Route path="/resident/reports"     element={<ReportHistory />} />
-              <Route path="/resident/reports/:id" element={<ViewReport />} />
+              <Route path="/resident/reports/new"      element={<CreateReport />} />
+              <Route path="/resident/reports/:id/edit" element={<CreateReport />} />
+              <Route path="/resident/reports"          element={<ReportHistory />} />
+              <Route path="/resident/reports/:id"      element={<ViewReport />} />
               <Route path="/resident/generate"    element={<GenerateReport />} />
               <Route path="/resident/messages"    element={<ResidentMessages />} />
               <Route path="/resident/calendar"    element={<ResidentCalendar />} />

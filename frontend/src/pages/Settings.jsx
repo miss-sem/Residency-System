@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
-import { authAPI, authExtAPI } from '../services/api';
-import { User, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { authAPI, authExtAPI, reportAPI } from '../services/api';
+import { User, Lock, Eye, EyeOff, CheckCircle, AlertCircle, ChevronRight, Calendar } from 'lucide-react';
+import { formatWeek } from '../utils/helpers';
 
 const FeedbackBanner = ({ type, message }) => {
   if (!message) return null;
@@ -18,8 +20,23 @@ const FeedbackBanner = ({ type, message }) => {
   );
 };
 
+const STATUS_DOT   = { draft: 'bg-gray-300',  submitted: 'bg-blue-400',  reviewed: 'bg-green-400'  };
+const STATUS_LABEL = { draft: 'Draft',         submitted: 'Submitted',    reviewed: 'Reviewed'       };
+const STATUS_TEXT  = { draft: 'text-gray-500', submitted: 'text-blue-600',reviewed: 'text-green-600' };
+const STATUS_BORDER= { draft: 'hover:border-l-gray-300', submitted: 'hover:border-l-blue-400', reviewed: 'hover:border-l-green-500' };
+
 const Settings = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
+  const [recentReports, setRecentReports] = useState([]);
+
+  useEffect(() => {
+    if (user?.role === 'resident') {
+      reportAPI.getMyDashboard()
+        .then(({ data }) => setRecentReports(data.recentReports ?? []))
+        .catch(() => {});
+    }
+  }, [user?.role]);
 
   // Profile form
   const [profileMsg, setProfileMsg] = useState({ type: '', text: '' });
@@ -68,6 +85,43 @@ const Settings = () => {
         <h1 className="text-2xl font-bold text-gray-800 mb-1">Settings</h1>
         <p className="text-sm text-gray-400">Manage your account details and security</p>
       </div>
+
+      {user?.role === 'resident' && (
+        <div className="card overflow-hidden mb-6">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Calendar size={15} className="text-primary" /> Recent Activity
+            </h2>
+            <button onClick={() => navigate('/resident/reports')}
+              className="text-xs text-primary font-medium hover:underline">
+              View all
+            </button>
+          </div>
+          {recentReports.filter(r => r.status !== 'reviewed').length === 0 ? (
+            <p className="text-sm text-gray-400 italic text-center py-8">No active reports.</p>
+          ) : (
+            recentReports.filter(r => r.status !== 'reviewed').map((r) => (
+              <button
+                key={r._id}
+                onClick={() => navigate(`/resident/reports/${r._id}`)}
+                className={`w-full flex items-center gap-4 px-5 py-3.5 hover:bg-primary/[0.03]
+                  transition-all duration-200 text-left border-b border-gray-50 last:border-0
+                  border-l-[3px] border-l-transparent ${STATUS_BORDER[r.status]}`}
+              >
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${STATUS_DOT[r.status]}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-700 truncate">{r.unit}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{formatWeek(r.weekStartDate)}</p>
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-wide flex-shrink-0 ${STATUS_TEXT[r.status]}`}>
+                  {STATUS_LABEL[r.status]}
+                </span>
+                <ChevronRight size={13} className="text-gray-300 flex-shrink-0" />
+              </button>
+            ))
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 

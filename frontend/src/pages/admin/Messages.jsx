@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { messageAPI } from '../../services/api';
-import { Send, MessageSquare, Loader2, Search } from 'lucide-react';
+import { Send, MessageSquare, Loader2, Search, SquarePen, X } from 'lucide-react';
 
 const Avatar = ({ name, size = 9, online = false }) => {
   const initials = name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
@@ -42,6 +42,8 @@ const AdminMessages = () => {
   const [sending, setSending]     = useState(false);
   const [search, setSearch]       = useState('');
   const [isTyping, setIsTyping]   = useState(false);
+  const [contacts, setContacts]   = useState([]);
+  const [composing, setComposing] = useState(false);
   const bottomRef    = useRef(null);
   const typingRef    = useRef(null);
   const didInitRef   = useRef(false);
@@ -60,7 +62,10 @@ const AdminMessages = () => {
     }
   }, []);
 
-  useEffect(() => { loadConversations(); }, []);
+  useEffect(() => {
+    loadConversations();
+    messageAPI.getContacts().then(({ data }) => setContacts(data.contacts)).catch(() => {});
+  }, []);
 
   // Load messages for active conversation
   useEffect(() => {
@@ -158,10 +163,20 @@ const AdminMessages = () => {
   const isMine = (msg) => msg.sender?._id === user._id || msg.sender === user._id;
   const isOnline = (id) => onlineUsers.includes(id);
 
+  const startConversation = (contact) => {
+    const existing = conversations.find(c => c.user._id === contact._id);
+    setActive(existing || { user: contact, lastMessage: null, unread: 0 });
+    setComposing(false);
+    setSearch('');
+  };
+
   const filtered = conversations.filter(c =>
     c.user.name.toLowerCase().includes(search.toLowerCase()) ||
     c.user.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Reviewers not already in conversations
+  const newContacts = contacts.filter(c => !conversations.some(cv => cv.user._id === c._id));
 
   return (
     <div className="flex h-full animate-fade-in">
@@ -169,19 +184,46 @@ const AdminMessages = () => {
       {/* Left: conversation list */}
       <div className="w-72 flex-shrink-0 border-r border-gray-100 flex flex-col bg-white">
         <div className="px-4 py-4 border-b border-gray-100">
-          <h1 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <MessageSquare size={17} className="text-primary" /> Messages
-          </h1>
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search students…"
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 focus:outline-none
-                         focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              <MessageSquare size={17} className="text-primary" /> Messages
+            </h1>
+            {contacts.length > 0 && (
+              <button
+                onClick={() => setComposing(v => !v)}
+                title={composing ? 'Cancel' : 'New message'}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-all">
+                {composing ? <X size={15} /> : <SquarePen size={15} />}
+              </button>
+            )}
           </div>
+
+          {composing ? (
+            <div className="animate-fade-in">
+              <p className="text-xs text-gray-400 mb-2">Start a conversation with a reviewer:</p>
+              {contacts.map(c => (
+                <button key={c._id} onClick={() => startConversation(c)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-primary/[0.06] transition-colors text-left">
+                  <Avatar name={c.name} size={7} online={isOnline(c._id)} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{c.name}</p>
+                    <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search…"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 focus:outline-none
+                           focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -302,7 +344,7 @@ const AdminMessages = () => {
             <MessageSquare size={28} className="text-primary" />
           </div>
           <p className="text-sm font-semibold text-gray-700">Select a conversation</p>
-          <p className="text-xs text-gray-400">Choose a student from the left to view their messages</p>
+          <p className="text-xs text-gray-400">Choose a conversation or start a new one</p>
         </div>
       )}
     </div>

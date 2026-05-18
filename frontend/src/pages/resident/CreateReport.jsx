@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { reportAPI } from '../../services/api';
 import { UNITS, DAYS, DAY_LABELS, getMondayOfWeek } from '../../utils/helpers';
 import {
   Save, Send, ChevronDown, BookOpen, Check,
-  Calendar, ChevronLeft, ChevronRight, CheckCircle,
+  Calendar, ChevronLeft, ChevronRight, ArrowLeft,
 } from 'lucide-react';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 /* ─── Unit custom dropdown ───────────────────────────────────────────────── */
 const UnitSelect = ({ value, onChange, error }) => {
@@ -216,17 +217,21 @@ const WeekPicker = ({ value, onChange, error }) => {
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 const CreateReport = () => {
   const navigate = useNavigate();
+  const { id }   = useParams();
+  const isEdit   = Boolean(id);
+
   const [activeDay, setActiveDay]   = useState('monday');
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting]   = useState(false);
-  const [draftSaved, setDraftSaved]   = useState(false);
-  const reportIdRef = useRef(null); // tracks existing draft ID so we update instead of re-create
+  const [loadingDraft, setLoadingDraft] = useState(isEdit);
+  const reportIdRef = useRef(id || null);
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -243,6 +248,21 @@ const CreateReport = () => {
     },
   });
 
+  useEffect(() => {
+    if (!isEdit) return;
+    reportAPI.getMyReport(id)
+      .then(({ data }) => {
+        const r = data.report;
+        reset({
+          unit:          r.unit          || '',
+          weekStartDate: r.weekStartDate ? r.weekStartDate.slice(0, 10) : getMondayOfWeek(),
+          days:          r.days          || {},
+          additionalNotes: r.additionalNotes || '',
+        });
+      })
+      .finally(() => setLoadingDraft(false));
+  }, [id, isEdit]);
+
   const watchUnit     = watch('unit');
   const watchWeek     = watch('weekStartDate');
   const watchDays     = watch('days');
@@ -250,16 +270,16 @@ const CreateReport = () => {
 
   const saveDraft = handleSubmit(async (data) => {
     setServerError('');
-    setDraftSaved(false);
     try {
-      if (reportIdRef.current) {
-        await reportAPI.updateReport(reportIdRef.current, { ...data, status: 'draft' });
+      let draftId = reportIdRef.current;
+      if (draftId) {
+        await reportAPI.updateReport(draftId, { ...data, status: 'draft' });
       } else {
         const { data: res } = await reportAPI.createReport({ ...data, status: 'draft' });
-        reportIdRef.current = res.report._id;
+        draftId = res.report._id;
+        reportIdRef.current = draftId;
       }
-      setDraftSaved(true);
-      setTimeout(() => setDraftSaved(false), 3000);
+      navigate('/resident/dashboard');
     } catch (err) {
       setServerError(err.response?.data?.message || 'Something went wrong');
     }
@@ -277,7 +297,7 @@ const CreateReport = () => {
         id = res.report._id;
       }
       await reportAPI.submitReport(id);
-      navigate('/resident/reports');
+      navigate(isEdit ? `/resident/reports/${id}` : '/resident/reports');
     } catch (err) {
       setServerError(err.response?.data?.message || 'Something went wrong');
     } finally {
@@ -285,10 +305,18 @@ const CreateReport = () => {
     }
   });
 
+  if (loadingDraft) return <LoadingSpinner />;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+      {isEdit && (
+        <button onClick={() => navigate(`/resident/reports/${id}`)}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 mb-6 transition-colors group">
+          <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" /> Back to report
+        </button>
+      )}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Today's Report</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">{isEdit ? 'Edit Draft' : "Today's Report"}</h1>
         <p className="text-sm text-gray-400">Fill in your activities for each day, then save or submit</p>
       </div>
 
@@ -411,12 +439,7 @@ const CreateReport = () => {
               )}
 
               <div className="flex flex-wrap items-center gap-3 justify-end pt-1">
-                {draftSaved && (
-                  <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium animate-fade-in">
-                    <CheckCircle size={13} /> Draft saved — you can continue editing
-                  </span>
-                )}
-                <button type="button" onClick={saveDraft} disabled={isSubmitting || submitting} className="btn-outline">
+<button type="button" onClick={saveDraft} disabled={isSubmitting || submitting} className="btn-outline">
                   {isSubmitting && !submitting
                     ? <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
                     : <Save size={15} />}

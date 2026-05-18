@@ -209,18 +209,37 @@ const AdminDashboard = () => {
     : 0;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
+    <div className="p-4 sm:p-6 lg:p-8 animate-fade-in space-y-6">
 
-      {/* Header */}
-      <div className="relative z-50 flex items-start justify-between mb-8 animate-slide-up">
-        <div>
-          <p className="text-xs text-gray-400 font-medium mb-1">{dateStr}</p>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {greeting}, {user?.name?.split(' ')[0]}
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">Overview of residency programme</p>
+      {/* ── Hero header ── */}
+      <div
+        className="relative z-50 card p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-slide-up"
+        style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%)', animationFillMode: 'both' }}
+      >
+        {/* Decorative circles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[inherit]">
+          <div className="absolute -top-10 -right-10 w-52 h-52 bg-primary/[0.06] rounded-full animate-[pulse_5s_ease-in-out_infinite]" />
+          <div className="absolute -bottom-8 right-20 w-28 h-28 bg-primary/[0.04] rounded-full animate-[pulse_7s_ease-in-out_1.5s_infinite]" />
+          <div className="absolute top-4 right-52 w-16 h-16 bg-primary/[0.03] rounded-full animate-[pulse_6s_ease-in-out_3s_infinite]" />
         </div>
-        <div ref={notifRef} className="relative flex-shrink-0">
+
+        <div className="relative z-10">
+          <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1.5 animate-fade-in"
+            style={{ animationDelay: '60ms', animationFillMode: 'both' }}>
+            {dateStr}
+          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1 animate-slide-up"
+            style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+            {greeting},{' '}
+            <span className="text-primary">{user?.role === 'admin' ? 'Admin' : user?.name?.split(' ')[0]}</span>
+          </h1>
+          <p className="text-sm text-gray-400 animate-fade-in"
+            style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
+            Overview of residency programme
+          </p>
+        </div>
+
+        <div ref={notifRef} className="relative z-10 flex-shrink-0">
           <NotifWidget unread={unread} onClick={() => setShowNotifs(v => !v)} />
           {showNotifs && (
             <NotificationPanel
@@ -231,19 +250,19 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Residents" value={stats?.totalResidents} icon={Users}       color="primary" delay={0}   />
         <StatCard label="Total Reports"   value={stats?.totalReports}   icon={FileText}    color="blue"    delay={80}  sub="Submitted & reviewed" />
         <StatCard label="Pending Review"  value={stats?.pendingReview}  icon={Clock}       color="amber"   delay={160} />
         <StatCard label="Reviewed"        value={stats?.reviewed}       icon={CheckCircle} color="green"   delay={240} />
       </div>
 
-      {/* Middle row: weekly chart + donut */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+      {/* ── Middle row: weekly chart + donut ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Weekly submissions bar chart */}
-        <div className="card p-6 lg:col-span-2 animate-slide-up"
+        <div className="card p-6 lg:col-span-2 animate-slide-in-left hover:shadow-md transition-shadow duration-300"
           style={{ animationDelay: '280ms', animationFillMode: 'both' }}>
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -253,7 +272,7 @@ const AdminDashboard = () => {
               <p className="text-xs text-gray-400 mt-0.5">Reports submitted over the last 6 weeks</p>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 bg-primary" />
+              <div className="w-2 h-2 rounded-full bg-primary" />
               <span className="text-[10px] text-gray-400">Submissions</span>
             </div>
           </div>
@@ -265,14 +284,14 @@ const AdminDashboard = () => {
         </div>
 
         {/* Donut status chart */}
-        <div className="card p-6 animate-slide-up"
+        <div className="card p-6 animate-slide-in-right hover:shadow-md transition-shadow duration-300"
           style={{ animationDelay: '320ms', animationFillMode: 'both' }}>
           <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
             <PieChart size={15} className="text-primary" /> Submission Status
           </h2>
           <DonutRing reviewed={reviewed} pending={submitted} />
           <div className="space-y-2.5 mt-1">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0" />
                 <span className="text-xs text-gray-600">Reviewed</span>
@@ -282,7 +301,7 @@ const AdminDashboard = () => {
                 <span className="text-gray-300 font-normal ml-1">({reviewedPct}%)</span>
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-fade-in" style={{ animationDelay: '560ms', animationFillMode: 'both' }}>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
                 <span className="text-xs text-gray-600">Pending Review</span>
@@ -296,24 +315,25 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Bottom row: pending reviews (full width) */}
-      <div className="grid grid-cols-1 gap-5">
-
-        {/* Pending reviews */}
-        <div className="card p-6 animate-slide-up"
+      {/* ── Pending reviews ── */}
+        <div className="card p-6 animate-slide-up hover:shadow-md transition-shadow duration-300"
           style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-bold text-gray-700">Pending Reviews</h2>
+            <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              <Clock size={14} className="text-amber-400" /> Pending Reviews
+            </h2>
             <button onClick={() => navigate('/admin/reports')}
-              className="text-xs text-primary font-semibold hover:underline">
+              className="text-xs text-primary font-semibold hover:underline transition-colors">
               View all
             </button>
           </div>
 
           {pending.length === 0 ? (
-            <div className="py-8 text-center">
-              <CheckCircle size={30} className="text-green-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-500">All caught up!</p>
+            <div className="py-10 text-center animate-fade-in">
+              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle size={22} className="text-green-400" />
+              </div>
+              <p className="text-sm font-semibold text-gray-600">All caught up!</p>
               <p className="text-xs text-gray-300 mt-0.5">No reports awaiting review.</p>
             </div>
           ) : (
@@ -321,28 +341,31 @@ const AdminDashboard = () => {
               {pending.map((r, i) => (
                 <div key={r._id}
                   onClick={() => navigate(`/admin/reports/${r._id}`)}
-                  className="flex items-center gap-3 p-3 border border-gray-100 hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-200 cursor-pointer group animate-slide-up"
-                  style={{ animationDelay: `${420 + i * 50}ms`, animationFillMode: 'both' }}>
-                  <div className="w-8 h-8 bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  className="flex items-center gap-3 p-3 border border-gray-100 hover:border-primary/30
+                    hover:bg-primary/[0.02] hover:translate-x-0.5 transition-all duration-200 cursor-pointer group animate-fade-in"
+                  style={{ animationDelay: `${420 + i * 60}ms`, animationFillMode: 'both' }}>
+                  <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0
+                    group-hover:bg-primary/20 transition-colors duration-200">
                     <span className="text-xs font-bold text-primary">
                       {r.resident?.name?.[0]?.toUpperCase()}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-700 truncate">{r.resident?.name}</p>
+                    <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-primary transition-colors duration-200">
+                      {r.resident?.name}
+                    </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-xs text-gray-400">{formatWeek(r.weekStartDate)}</span>
                       <span className="text-gray-200">·</span>
                       <UnitBadge unit={r.unit} />
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors flex-shrink-0" />
+                  <ChevronRight size={14} className="text-gray-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" />
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
 
     </div>
   );

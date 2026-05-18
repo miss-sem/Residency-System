@@ -44,7 +44,7 @@ const ResetPassword = () => {
           <div className="w-8 h-8 bg-primary flex items-center justify-center">
             <span className="text-white font-bold text-xs">LB</span>
           </div>
-          <span className="text-sm font-bold text-gray-800">LogBook System</span>
+          <span className="text-sm font-bold text-gray-800">LogBook</span>
         </div>
 
         {done ? (

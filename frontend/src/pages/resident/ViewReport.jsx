@@ -8,7 +8,7 @@ import UnitBadge from '../../components/UnitBadge';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { SingleReportDoc } from '../../components/ReportPDF';
 import { DAYS, DAY_LABELS, formatDate, formatWeek } from '../../utils/helpers';
-import { ArrowLeft, MessageSquare, Calendar, Send, Trash2, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, Send, Trash2, Download, Loader2, Pencil } from 'lucide-react';
 
 const ViewReport = () => {
   const { id } = useParams();
@@ -93,6 +93,10 @@ const ViewReport = () => {
               <button onClick={handleDelete} disabled={deleting}
                 className="btn-ghost text-red-400 hover:bg-red-50 hover:text-red-500">
                 <Trash2 size={14} /> Delete
+              </button>
+              <button onClick={() => navigate(`/resident/reports/${id}/edit`)}
+                className="btn-outline">
+                <Pencil size={14} /> Edit
               </button>
               <button onClick={handleSubmit} disabled={submitting} className="btn-primary">
                 {submitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send size={14} />}

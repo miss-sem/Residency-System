@@ -195,7 +195,7 @@ const ReportPage = ({ report, pageNumber, totalPages }) => {
 
       {/* Footer */}
       <View style={s.footer} fixed>
-        <Text style={s.footerText}>LogBook System — Confidential</Text>
+        <Text style={s.footerText}>LogBook — Confidential</Text>
         <Text style={s.footerText}>
           Page {pageNumber} of {totalPages}
         </Text>
@@ -213,7 +213,7 @@ export const SingleReportDoc = ({ report }) => (
 
 /* ── Multi-report document ────────────────────────────────────────────────── */
 export const MultiReportDoc = ({ reports }) => (
-  <Document title="LogBook System — Weekly Reports">
+  <Document title="LogBook — Weekly Reports">
     {reports.map((r, i) => (
       <ReportPage key={r._id} report={r} pageNumber={i + 1} totalPages={reports.length} />
     ))}
@@ -294,7 +294,7 @@ const DayPage = ({ report, day }) => {
       </View>
 
       <View style={s.footer} fixed>
-        <Text style={s.footerText}>LogBook System — Confidential</Text>
+        <Text style={s.footerText}>LogBook — Confidential</Text>
         <Text style={s.footerText}>Daily Report · {DAY_LABELS[day] ?? day}</Text>
       </View>
     </Page>

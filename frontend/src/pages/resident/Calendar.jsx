@@ -85,9 +85,15 @@ const ResidentCalendar = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const STATUS_RANK = { reviewed: 3, submitted: 2, draft: 1 };
   const reportMap = {};
   for (const r of reports) {
-    if (r.weekStartDate) reportMap[toKey(r.weekStartDate)] = r;
+    if (!r.weekStartDate) continue;
+    const key = r.weekStartDate.slice(0, 10);
+    const existing = reportMap[key];
+    if (!existing || (STATUS_RANK[r.status] ?? 0) > (STATUS_RANK[existing.status] ?? 0)) {
+      reportMap[key] = r;
+    }
   }
 
   const changeMonth = (dir) => {

@@ -55,11 +55,13 @@ export const reportAPI = {
 };
 
 export const messageAPI = {
-  getConversations: ()           => api.get('/messages/conversations'),
-  getMessages:      (userId)     => api.get(`/messages/${userId}`),
-  sendMessage:      (data)       => api.post('/messages', data),
-  getUnreadCount:   ()           => api.get('/messages/unread/count'),
-  getAdminContact:  ()           => api.get('/messages/admin-contact'),
+  getConversations:   ()           => api.get('/messages/conversations'),
+  getMessages:        (userId)     => api.get(`/messages/${userId}`),
+  getReportComments:  (reportId)   => api.get(`/messages/report/${reportId}`),
+  sendMessage:        (data)       => api.post('/messages', data),
+  getUnreadCount:     ()           => api.get('/messages/unread/count'),
+  getAdminContact:    ()           => api.get('/messages/admin-contact'),
+  getContacts:        ()           => api.get('/messages/contacts'),
 };
 
 export const notifAPI = {

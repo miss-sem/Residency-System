@@ -32,7 +32,7 @@ export const NotificationProvider = ({ children }) => {
 
       // Browser push when tab hidden
       if (document.hidden && Notification.permission === 'granted') {
-        new Notification('LogBook System', { body: notif.message, icon: '/favicon.ico' });
+        new Notification('LogBook', { body: notif.message, icon: '/favicon.ico' });
       }
     };
 

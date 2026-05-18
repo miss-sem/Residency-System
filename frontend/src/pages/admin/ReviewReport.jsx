@@ -15,14 +15,15 @@ const ReviewReport = () => {
   const { user }   = useAuth();
   const isReviewer = user?.role === 'reviewer';
 
-  const [report,       setReport]       = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [activeDay,    setActiveDay]    = useState('monday');
-  const [reviewed,     setReviewed]     = useState(false);
-  const [adminContact, setAdminContact] = useState(null);
-  const [comment,      setComment]      = useState('');
-  const [commentSent,  setCommentSent]  = useState(false);
-  const [sending,      setSending]      = useState(false);
+  const [report,        setReport]        = useState(null);
+  const [loading,       setLoading]       = useState(true);
+  const [activeDay,     setActiveDay]     = useState('monday');
+  const [reviewed,      setReviewed]      = useState(false);
+  const [adminContact,  setAdminContact]  = useState(null);
+  const [comment,       setComment]       = useState('');
+  const [commentSent,   setCommentSent]   = useState(false);
+  const [sending,       setSending]       = useState(false);
+  const [reviewerComments, setReviewerComments] = useState([]);
 
   const {
     register,
@@ -31,12 +32,13 @@ const ReviewReport = () => {
   } = useForm({ defaultValues: { adminFeedback: '' } });
 
   useEffect(() => {
-    const fetches = [reportAPI.getReport(id)];
+    const fetches = [reportAPI.getReport(id), messageAPI.getReportComments(id)];
     if (isReviewer) fetches.push(messageAPI.getAdminContact());
     Promise.all(fetches)
-      .then(([rep, contact]) => {
+      .then(([rep, comments, contact]) => {
         setReport(rep.data.report);
         if (rep.data.report.status === 'reviewed') setReviewed(true);
+        setReviewerComments(comments.data.messages);
         if (contact) setAdminContact(contact.data.user);
       })
       .finally(() => setLoading(false));
@@ -167,6 +169,46 @@ const ReviewReport = () => {
                 </button>
               </div>
             </form>
+          )}
+        </div>
+      )}
+
+      {/* Reviewer comments — visible to admin */}
+      {!isReviewer && (
+        <div className="card p-6 animate-slide-up" style={{ animationDelay: '120ms', animationFillMode: 'both' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <MessageSquare size={15} className="text-primary" />
+            <h2 className="text-sm font-bold text-gray-800">Reviewer Comments</h2>
+            {reviewerComments.length > 0 && (
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {reviewerComments.length}
+              </span>
+            )}
+          </div>
+
+          {reviewerComments.length === 0 ? (
+            <p className="text-xs text-gray-400 italic py-4 text-center">No reviewer comments yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {reviewerComments.map((m) => (
+                <div key={m._id} className="flex items-start gap-3 animate-fade-in">
+                  <div className="w-7 h-7 bg-purple-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] font-bold text-purple-500">
+                      {m.sender?.name?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1 bg-gray-50 border border-gray-100 px-3 py-2.5 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-gray-700">{m.sender?.name}</span>
+                      <span className="text-[10px] text-gray-400">
+                        {new Date(m.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed">{m.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}

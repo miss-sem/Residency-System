@@ -40,7 +40,7 @@ const AppLayout = () => {
           <div className="w-7 h-7 bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-xs">LB</span>
           </div>
-          <span className="text-sm font-bold text-gray-800">LogBook System</span>
+          <span className="text-sm font-bold text-gray-800">LogBook</span>
         </header>
 
         <main className="flex-1 overflow-y-auto">
