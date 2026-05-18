@@ -8,7 +8,12 @@ const { protect } = require('../middleware/auth');
 router.get('/conversations', protect, async (req, res) => {
   try {
     const userId = req.user._id;
-    const msgs = await Message.find({ $or: [{ sender: userId }, { receiver: userId }] })
+    const msgs = await Message.find({
+      $and: [
+        { $or: [{ sender: userId }, { receiver: userId }] },
+        { $or: [{ report: null }, { report: { $exists: false } }] },
+      ],
+    })
       .sort({ createdAt: -1 })
       .populate('sender',   'name email role')
       .populate('receiver', 'name email role');
