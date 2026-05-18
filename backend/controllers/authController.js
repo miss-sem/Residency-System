@@ -223,10 +223,6 @@ exports.reviewerAccess = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: 'Invite link is invalid or has expired' });
 
-    user.inviteToken   = undefined;
-    user.inviteExpires = undefined;
-    await user.save();
-
     const jwtToken = signToken(user._id);
     res.json({ token: jwtToken, user: formatUser(user) });
   } catch (err) {

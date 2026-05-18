@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = `"LogBook System" <${process.env.FROM_EMAIL}>`;
+const FROM = `"LogBook" <${process.env.FROM_EMAIL}>`;
 
 exports.sendPasswordReset = async (to, resetUrl) => {
   await transporter.sendMail({
@@ -20,7 +20,7 @@ exports.sendPasswordReset = async (to, resetUrl) => {
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:8px">
         <h2 style="color:#2563EB;margin-top:0">Password Reset</h2>
-        <p style="color:#374151">You requested a password reset for your LogBook System account.</p>
+        <p style="color:#374151">You requested a password reset for your LogBook account.</p>
         <p style="color:#374151">Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
         <a href="${resetUrl}"
            style="display:inline-block;background:#2563EB;color:#fff;padding:12px 28px;
@@ -43,7 +43,7 @@ exports.sendInvite = async (to, inviteUrl, inviterName) => {
     html: `
       <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:8px">
         <h2 style="color:#2563EB;margin-top:0">You're Invited</h2>
-        <p style="color:#374151"><strong>${inviterName}</strong> has invited you to access the LogBook System admin portal as a <strong>Reviewer</strong>.</p>
+        <p style="color:#374151"><strong>${inviterName}</strong> has invited you to access the LogBook admin portal as a <strong>Reviewer</strong>.</p>
         <p style="color:#374151">Click the button below to access the portal and start reviewing student reports. This link expires in <strong>48 hours</strong>.</p>
         <a href="${inviteUrl}"
            style="display:inline-block;background:#2563EB;color:#fff;padding:12px 28px;

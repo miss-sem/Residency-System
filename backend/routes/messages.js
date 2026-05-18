@@ -46,6 +46,24 @@ router.get('/unread/count', protect, async (req, res) => {
   }
 });
 
+// GET /api/messages/contacts — chat contacts based on caller role
+// admin → all reviewers; reviewer → admin; resident → admin
+router.get('/contacts', protect, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    let query;
+    if (req.user.role === 'admin') {
+      query = { role: 'reviewer' };
+    } else {
+      query = { role: 'admin' };
+    }
+    const contacts = await User.find(query).select('_id name email role');
+    res.json({ contacts });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET /api/messages/admin-contact — returns the admin user for residents to initiate contact
 router.get('/admin-contact', protect, async (req, res) => {
   try {
@@ -53,6 +71,18 @@ router.get('/admin-contact', protect, async (req, res) => {
     const admin = await User.findOne({ role: 'admin' }).select('_id name email role');
     if (!admin) return res.status(404).json({ message: 'No admin found' });
     res.json({ user: admin });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/messages/report/:reportId — all reviewer comments on a specific report
+router.get('/report/:reportId', protect, async (req, res) => {
+  try {
+    const messages = await Message.find({ report: req.params.reportId })
+      .sort({ createdAt: 1 })
+      .populate('sender', 'name role');
+    res.json({ messages });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -103,12 +133,20 @@ router.post('/', protect, async (req, res) => {
       io.to(req.user._id.toString()).emit('new_message', message);
     }
 
-    // Persist notification for receiver
+    // Persist notification — reviewer comments link directly to the report
+    const notifLink = reportId && req.user.role === 'reviewer'
+      ? `/admin/reports/${reportId}`
+      : req.user.role === 'resident'
+        ? `/admin/messages`
+        : `/resident/messages`;
+
     const notif = await Notification.create({
       recipient: receiverId,
       type:      'message',
-      message:   `New message from ${req.user.name}`,
-      link:      req.user.role === 'resident' ? `/admin/messages` : `/resident/messages`,
+      message:   reportId && req.user.role === 'reviewer'
+        ? `${req.user.name} left a comment on a report`
+        : `New message from ${req.user.name}`,
+      link: notifLink,
     });
     if (io) io.to(receiverId).emit('notification', notif);
 
