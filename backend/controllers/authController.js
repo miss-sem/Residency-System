@@ -196,13 +196,20 @@ exports.inviteReviewer = async (req, res) => {
     }
 
     const inviteUrl = `${process.env.CLIENT_URL}/reviewer-access?token=${token}`;
+    let emailFailed = false;
     try {
       await sendInvite(email, inviteUrl, req.user.name);
-    } catch (_) {
-      console.error('Invite email failed:', _);
+    } catch (emailErr) {
+      console.error('Invite email failed:', emailErr.message);
+      emailFailed = true;
     }
 
-    res.status(201).json({ message: 'Invitation sent', user: formatUser(user) });
+    res.status(201).json({
+      message:    emailFailed ? 'Reviewer account created but email failed to send. Check your email service config.' : 'Invitation sent',
+      inviteUrl,
+      emailFailed,
+      user: formatUser(user),
+    });
   } catch (err) {
     console.error('[inviteReviewer]', err.message);
     res.status(500).json({ message: err.message || 'Failed to send invitation' });
