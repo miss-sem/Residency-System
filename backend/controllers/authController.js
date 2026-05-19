@@ -195,7 +195,7 @@ exports.inviteReviewer = async (req, res) => {
       });
     }
 
-    const inviteUrl = `${process.env.CLIENT_URL}/reviewer-access?token=${token}`;
+    const inviteUrl = `${process.env.CLIENT_URL}/accept-invite?token=${token}`;
     let emailFailed = false;
     try {
       await sendInvite(email, inviteUrl, req.user.name);
@@ -238,6 +238,25 @@ exports.reviewerAccess = async (req, res) => {
   }
 };
 
+exports.getInviteInfo = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ message: 'Token is required' });
+
+    const hashed = crypto.createHash('sha256').update(token).digest('hex');
+    const user   = await User.findOne({
+      inviteToken:   hashed,
+      inviteExpires: { $gt: Date.now() },
+    }).select('+inviteToken +inviteExpires');
+
+    if (!user) return res.status(400).json({ message: 'Invite link is invalid or has expired' });
+
+    res.json({ email: user.email, name: user.name });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 exports.acceptInvite = async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -250,8 +269,14 @@ exports.acceptInvite = async (req, res) => {
       inviteExpires: { $gt: Date.now() },
     }).select('+inviteToken +inviteExpires');
 
-    if (!user)
-      return res.status(400).json({ message: 'Invite link is invalid or has expired' });
+    if (!user) {
+      // Distinguish: token exists but expired vs token not found (already used)
+      const anyUser = await User.findOne({ inviteToken: hashed }).select('+inviteToken +inviteExpires');
+      if (anyUser) {
+        return res.status(400).json({ message: 'This invite link has expired. Please ask for a new invitation.' });
+      }
+      return res.status(400).json({ message: 'This invite link has already been used. Please sign in instead.' });
+    }
 
     user.password      = password;
     user.inviteToken   = undefined;

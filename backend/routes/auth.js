@@ -3,7 +3,7 @@ const router  = express.Router();
 const {
   register, login, getMe, updateProfile,
   forgotPassword, resetPassword, changePassword,
-  createReviewer, inviteReviewer, reviewerAccess, acceptInvite,
+  createReviewer, inviteReviewer, reviewerAccess, acceptInvite, getInviteInfo,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -19,6 +19,7 @@ router.post('/reset-password',   resetPassword);
 router.post('/create-reviewer',  protect, createReviewer);
 router.post('/invite-reviewer',  protect, inviteReviewer);
 router.post('/reviewer-access',  reviewerAccess);
+router.get('/invite-info',       getInviteInfo);
 router.post('/accept-invite',    acceptInvite);
 
 module.exports = router;
