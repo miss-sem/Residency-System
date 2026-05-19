@@ -42,7 +42,7 @@ const Sidebar = ({ onClose }) => {
   const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
-    <aside className="w-64 h-full bg-white border-r border-gray-100 flex flex-col overflow-y-auto">
+    <aside className="w-64 h-full bg-white border-r border-gray-100 flex flex-col overflow-hidden">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ const Sidebar = ({ onClose }) => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {links.map((link, i) => (
           <NavLink
             key={link.to}
