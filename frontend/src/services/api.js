@@ -80,6 +80,7 @@ export const authExtAPI = {
   createReviewer:  (data)            => api.post('/auth/create-reviewer',   data),
   inviteReviewer:  (data)            => api.post('/auth/invite-reviewer',   data),
   reviewerAccess:  (token)           => api.post('/auth/reviewer-access',   { token }),
+  getInviteInfo:   (token)           => api.get('/auth/invite-info', { params: { token } }),
   acceptInvite:    (data)            => api.post('/auth/accept-invite',     data),
 };
 

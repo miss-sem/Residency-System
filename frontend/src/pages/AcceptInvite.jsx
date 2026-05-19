@@ -2,35 +2,33 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { authExtAPI } from '../services/api';
-import { Lock, CheckCircle, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Lock, Mail, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 const AcceptInvite = () => {
   const [searchParams]            = useSearchParams();
   const navigate                  = useNavigate();
-  const [done, setDone]           = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  const { loginWithToken }        = useAuth();
   const [serverError, setServerError] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
   const token = searchParams.get('token');
+
+  useEffect(() => {
+    if (!token) return;
+    authExtAPI.getInviteInfo(token)
+      .then(({ data }) => setInviteEmail(data.email))
+      .catch(() => {});
+  }, [token]);
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } =
     useForm({ defaultValues: { password: '', confirmPassword: '' } });
 
-  useEffect(() => {
-    if (!done) return;
-    const t = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) { clearInterval(t); navigate('/login', { replace: true }); }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, [done]);
-
   const onSubmit = async ({ password }) => {
     setServerError('');
     try {
-      await authExtAPI.acceptInvite({ token, password });
-      setDone(true);
+      const { data } = await authExtAPI.acceptInvite({ token, password });
+      loginWithToken(data.token, data.user);
+      navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       setServerError(err.response?.data?.message || 'Invite link is invalid or has expired');
     }
@@ -48,26 +46,7 @@ const AcceptInvite = () => {
           <span className="text-sm font-bold text-gray-800">LogBook</span>
         </div>
 
-        {done ? (
-          <div className="animate-fade-in">
-            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle size={28} className="text-green-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Account ready!</h2>
-            <p className="text-sm text-gray-400 mb-1">
-              Your reviewer account has been set up successfully.
-            </p>
-            <p className="text-sm text-gray-400 mb-6">
-              Redirecting to sign in in <span className="font-bold text-primary">{countdown}</span>s…
-            </p>
-            <Link to="/login" className="w-full flex items-center justify-center gap-2 bg-primary
-              text-white text-sm font-semibold py-3.5 transition-all duration-200 shadow-primary
-              hover:shadow-lg active:scale-[0.98]">
-              Sign in now <ArrowRight size={15} />
-            </Link>
-          </div>
-        ) : (
-          <>
+        <>
             <div className="mb-8">
               <div className="w-10 h-10 bg-primary/10 flex items-center justify-center mb-5">
                 <ShieldCheck size={20} className="text-primary" />
@@ -95,6 +74,20 @@ const AcceptInvite = () => {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+              {inviteEmail && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-2">
+                    <span className="flex items-center gap-1.5">
+                      <Mail size={11} /> Your sign-in email
+                    </span>
+                  </label>
+                  <div className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 text-gray-500 select-all">
+                    {inviteEmail}
+                  </div>
+                  <p className="mt-1.5 text-xs text-gray-400">Use this email to sign in after activating your account.</p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-2">
                   <span className="flex items-center gap-1.5">
@@ -156,7 +149,6 @@ const AcceptInvite = () => {
               <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
             </p>
           </>
-        )}
       </div>
     </div>
   );

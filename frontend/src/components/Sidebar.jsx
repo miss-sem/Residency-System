@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMessages } from '../context/MessageContext';
 import {
   Users, ClipboardList, LayoutDashboard,
   LogOut, ChevronRight, X, Settings, Download,
@@ -32,6 +33,7 @@ const reviewerLinks = [
 
 const Sidebar = ({ onClose }) => {
   const { user, logout } = useAuth();
+  const { unreadCount } = useMessages();
   const navigate = useNavigate();
   const links = user?.role === 'admin' ? adminLinks
     : user?.role === 'reviewer' ? reviewerLinks
@@ -76,7 +78,12 @@ const Sidebar = ({ onClose }) => {
               <>
                 <link.icon size={17} className="flex-shrink-0" />
                 <span className="flex-1">{link.label}</span>
-                {isActive && <ChevronRight size={14} className="opacity-70" />}
+                {link.label === 'Chat' && !isActive && unreadCount > 0
+                  ? <span className="min-w-[20px] h-5 px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  : isActive && <ChevronRight size={14} className="opacity-70" />
+                }
               </>
             )}
           </NavLink>

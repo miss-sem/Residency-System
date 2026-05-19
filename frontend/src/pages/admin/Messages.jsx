@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { useMessages } from '../../context/MessageContext';
 import { messageAPI } from '../../services/api';
 import { Send, MessageSquare, Loader2, Search, SquarePen, X } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const TypingIndicator = () => (
 const AdminMessages = () => {
   const { user } = useAuth();
   const { socket, onlineUsers } = useSocket();
+  const { resetUnread } = useMessages();
   const [conversations, setConversations] = useState([]);
   const [active, setActive]       = useState(null);
   const [messages, setMessages]   = useState([]);
@@ -63,13 +65,23 @@ const AdminMessages = () => {
   }, []);
 
   useEffect(() => {
+    resetUnread();
     loadConversations();
     messageAPI.getContacts().then(({ data }) => setContacts(data.contacts)).catch(() => {});
   }, []);
 
-  // Load messages for active conversation
+  // For reviewers with no conversations, auto-open the admin contact
+  useEffect(() => {
+    if (!loading && user.role === 'reviewer' && !didInitRef.current && contacts.length > 0) {
+      setActive({ user: contacts[0], lastMessage: null, unread: 0 });
+      didInitRef.current = true;
+    }
+  }, [loading, contacts]);
+
+  // Load messages for active conversation and clear unread badge
   useEffect(() => {
     if (!active) return;
+    resetUnread();
     setMessages([]);
     messageAPI.getMessages(active.user._id).then(({ data }) => setMessages(data.messages));
   }, [active?.user._id]);
@@ -88,6 +100,7 @@ const AdminMessages = () => {
       if (active && senderId === active.user._id) {
         setMessages(prev => prev.find(m => m._id === msg._id) ? prev : [...prev, msg]);
         setIsTyping(false);
+        resetUnread();
       }
       loadConversations();
     };
@@ -162,6 +175,7 @@ const AdminMessages = () => {
 
   const isMine = (msg) => msg.sender?._id === user._id || msg.sender === user._id;
   const isOnline = (id) => onlineUsers.includes(id);
+  const displayName = (u) => u?.role === 'admin' ? 'Admin' : (u?.name || '?');
 
   const startConversation = (contact) => {
     const existing = conversations.find(c => c.user._id === contact._id);
@@ -204,9 +218,9 @@ const AdminMessages = () => {
               {contacts.map(c => (
                 <button key={c._id} onClick={() => startConversation(c)}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-primary/[0.06] transition-colors text-left">
-                  <Avatar name={c.name} size={7} online={isOnline(c._id)} />
+                  <Avatar name={displayName(c)} size={7} online={isOnline(c._id)} />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate">{c.name}</p>
+                    <p className="text-sm font-semibold text-gray-800 truncate">{displayName(c)}</p>
                     <p className="text-xs text-gray-400 truncate">{c.email}</p>
                   </div>
                 </button>
@@ -238,15 +252,21 @@ const AdminMessages = () => {
           {filtered.map((conv) => (
             <button
               key={conv.user._id}
-              onClick={() => setActive(conv)}
+              onClick={() => {
+                setActive(conv);
+                resetUnread();
+                setConversations(prev =>
+                  prev.map(c => c.user._id === conv.user._id ? { ...c, unread: 0 } : c)
+                );
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-gray-50
                 transition-all duration-150 text-left
                 ${active?.user._id === conv.user._id ? 'bg-primary/[0.06] border-l-2 border-l-primary' : 'hover:bg-gray-50'}`}
             >
-              <Avatar name={conv.user.name} size={9} online={isOnline(conv.user._id)} />
+              <Avatar name={displayName(conv.user)} size={9} online={isOnline(conv.user._id)} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{conv.user.name}</p>
+                  <p className="text-sm font-semibold text-gray-800 truncate">{displayName(conv.user)}</p>
                   {conv.unread > 0 && (
                     <span className="w-5 h-5 bg-primary text-white text-[10px] font-bold
                                      rounded-full flex items-center justify-center flex-shrink-0 ml-1">
@@ -268,9 +288,9 @@ const AdminMessages = () => {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Chat header */}
           <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-white flex-shrink-0">
-            <Avatar name={active.user.name} size={9} online={isOnline(active.user._id)} />
+            <Avatar name={displayName(active.user)} size={9} online={isOnline(active.user._id)} />
             <div>
-              <p className="text-sm font-bold text-gray-800">{active.user.name}</p>
+              <p className="text-sm font-bold text-gray-800">{displayName(active.user)}</p>
               <p className="text-xs text-gray-400">
                 {isOnline(active.user._id) ? (
                   <span className="text-green-500 font-medium">Online</span>
@@ -297,7 +317,7 @@ const AdminMessages = () => {
               const mine = isMine(m);
               return (
                 <div key={m._id} className={`flex items-end gap-2 mb-3 ${mine ? 'flex-row-reverse' : 'flex-row'} animate-fade-in`}>
-                  {!mine && <Avatar name={active.user.name} size={7} />}
+                  {!mine && <Avatar name={displayName(active.user)} size={7} />}
                   <div className={`max-w-[70%] flex flex-col gap-0.5 ${mine ? 'items-end' : 'items-start'}`}>
                     <div className={`px-4 py-2.5 text-sm leading-relaxed
                       ${mine

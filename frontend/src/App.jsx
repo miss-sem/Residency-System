@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { MessageProvider } from './context/MessageContext';
 import ProtectedRoute from './layouts/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import AuthLayout from './layouts/AuthLayout';
@@ -31,43 +32,45 @@ const App = () => (
   <AuthProvider>
     <SocketProvider> 
       <NotificationProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login"           element={<AuthLayout key="auth" />} />
-            <Route path="/signup"          element={<AuthLayout key="auth" />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password"  element={<ResetPassword />} />
-            <Route path="/accept-invite"   element={<AcceptInvite />} />
-            <Route path="/reviewer-access" element={<ReviewerAccess />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
+        <MessageProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login"           element={<AuthLayout key="auth" />} />
+              <Route path="/signup"          element={<AuthLayout key="auth" />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password"  element={<ResetPassword />} />
+              <Route path="/accept-invite"   element={<AcceptInvite />} />
+              <Route path="/reviewer-access" element={<ReviewerAccess />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Resident routes */}
-            <Route element={<ProtectedRoute role="resident"><AppLayout /></ProtectedRoute>}>
-              <Route path="/resident/dashboard"   element={<ResidentDashboard />} />
-              <Route path="/resident/reports/new"      element={<CreateReport />} />
-              <Route path="/resident/reports/:id/edit" element={<CreateReport />} />
-              <Route path="/resident/reports"          element={<ReportHistory />} />
-              <Route path="/resident/reports/:id"      element={<ViewReport />} />
-              <Route path="/resident/generate"    element={<GenerateReport />} />
-              <Route path="/resident/messages"    element={<ResidentMessages />} />
-              <Route path="/resident/calendar"    element={<ResidentCalendar />} />
-              <Route path="/resident/settings"    element={<Settings />} />
-            </Route>
+              {/* Resident routes */}
+              <Route element={<ProtectedRoute role="resident"><AppLayout /></ProtectedRoute>}>
+                <Route path="/resident/dashboard"        element={<ResidentDashboard />} />
+                <Route path="/resident/reports/new"      element={<CreateReport />} />
+                <Route path="/resident/reports/:id/edit" element={<CreateReport />} />
+                <Route path="/resident/reports"          element={<ReportHistory />} />
+                <Route path="/resident/reports/:id"      element={<ViewReport />} />
+                <Route path="/resident/generate"         element={<GenerateReport />} />
+                <Route path="/resident/messages"         element={<ResidentMessages />} />
+                <Route path="/resident/calendar"         element={<ResidentCalendar />} />
+                <Route path="/resident/settings"         element={<Settings />} />
+              </Route>
 
-            {/* Admin routes */}
-            <Route element={<ProtectedRoute role={['admin', 'reviewer']}><AppLayout /></ProtectedRoute>}>
-              <Route path="/admin/dashboard"   element={<AdminDashboard />} />
-              <Route path="/admin/residents"   element={<Residents />} />
-              <Route path="/admin/reports"     element={<Reports />} />
-              <Route path="/admin/reports/:id" element={<ReviewReport />} />
-              <Route path="/admin/messages"    element={<AdminMessages />} />
-              <Route path="/admin/invite"      element={<InviteReviewer />} />
-              <Route path="/admin/settings"    element={<Settings />} />
-            </Route>
+              {/* Admin / reviewer routes */}
+              <Route element={<ProtectedRoute role={['admin', 'reviewer']}><AppLayout /></ProtectedRoute>}>
+                <Route path="/admin/dashboard"   element={<AdminDashboard />} />
+                <Route path="/admin/residents"   element={<Residents />} />
+                <Route path="/admin/reports"     element={<Reports />} />
+                <Route path="/admin/reports/:id" element={<ReviewReport />} />
+                <Route path="/admin/messages"    element={<AdminMessages />} />
+                <Route path="/admin/invite"      element={<InviteReviewer />} />
+                <Route path="/admin/settings"    element={<Settings />} />
+              </Route>
 
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </BrowserRouter>
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </MessageProvider>
       </NotificationProvider>
     </SocketProvider>
   </AuthProvider>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { useMessages } from '../../context/MessageContext';
 import { messageAPI } from '../../services/api';
 import { Send, MessageSquare, Loader2 } from 'lucide-react';
 
@@ -32,6 +33,7 @@ const TypingIndicator = () => (
 const ResidentMessages = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+  const { resetUnread } = useMessages();
   const [messages, setMessages]   = useState([]);
   const [input, setInput]         = useState('');
   const [loading, setLoading]     = useState(true);
@@ -41,6 +43,8 @@ const ResidentMessages = () => {
   const [isTyping, setIsTyping]   = useState(false);
   const bottomRef  = useRef(null);
   const typingRef  = useRef(null);
+
+  useEffect(() => { resetUnread(); }, []);
 
   // Load admin conversation
   useEffect(() => {
