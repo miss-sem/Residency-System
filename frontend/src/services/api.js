@@ -15,7 +15,9 @@ api.interceptors.response.use(
   (err) => {
     const isAuthEndpoint = err.config?.url?.includes('/auth/login') ||
                            err.config?.url?.includes('/auth/register');
-    if (err.response?.status === 401 && !isAuthEndpoint) {
+    const isPublicPage   = ['/reviewer-access', '/accept-invite', '/forgot-password', '/reset-password']
+                             .some(p => window.location.pathname.startsWith(p));
+    if (err.response?.status === 401 && !isAuthEndpoint && !isPublicPage) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
