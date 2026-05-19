@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { authExtAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 
 const ReviewerAccess = () => {
-  const [params]         = useSearchParams();
-  const navigate         = useNavigate();
+  const [params]           = useSearchParams();
   const { loginWithToken } = useAuth();
   const [error, setError] = useState('');
 
@@ -17,7 +16,7 @@ const ReviewerAccess = () => {
     authExtAPI.reviewerAccess(token)
       .then(({ data }) => {
         loginWithToken(data.token, data.user);
-        navigate('/admin/dashboard', { replace: true });
+        window.location.replace('/admin/dashboard');
       })
       .catch((err) => {
         setError(err.response?.data?.message || 'This invitation link is invalid or has expired.');
