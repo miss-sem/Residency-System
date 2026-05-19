@@ -12,7 +12,14 @@ export const AuthProvider = ({ children }) => {
     if (!token) { setLoading(false); return; }
     authAPI.me()
       .then(({ data }) => { setUser(data.user); localStorage.setItem('user', JSON.stringify(data.user)); })
-      .catch(() => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); })
+      .catch(() => {
+        // Only clear auth if the token hasn't been replaced by loginWithToken
+        if (localStorage.getItem('token') === token) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 

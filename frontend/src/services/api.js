@@ -14,7 +14,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     const isAuthEndpoint = err.config?.url?.includes('/auth/login') ||
-                           err.config?.url?.includes('/auth/register');
+                           err.config?.url?.includes('/auth/register') ||
+                           err.config?.url?.includes('/auth/me');
     const isPublicPage   = ['/reviewer-access', '/accept-invite', '/forgot-password', '/reset-password']
                              .some(p => window.location.pathname.startsWith(p));
     if (err.response?.status === 401 && !isAuthEndpoint && !isPublicPage) {
