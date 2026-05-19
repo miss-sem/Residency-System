@@ -1,27 +1,39 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { authExtAPI } from '../../services/api';
-import { UserPlus, User, Mail, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { UserPlus, User, Mail, CheckCircle, Loader2, AlertCircle, Copy, Link } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const InviteReviewer = () => {
   const navigate = useNavigate();
-  const [sentTo, setSentTo] = useState('');
-  const [error, setError]   = useState('');
+  const [sentTo,     setSentTo]     = useState('');
+  const [inviteUrl,  setInviteUrl]  = useState('');
+  const [emailFailed, setEmailFailed] = useState(false);
+  const [copied,     setCopied]     = useState(false);
+  const [error,      setError]      = useState('');
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm({ defaultValues: { name: '', email: '' } });
 
   const onSubmit = async (data) => {
     setError('');
     try {
-      await authExtAPI.inviteReviewer(data);
+      const res = await authExtAPI.inviteReviewer(data);
       setSentTo(data.email);
+      setInviteUrl(res.data.inviteUrl || '');
+      setEmailFailed(res.data.emailFailed || false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send invitation. Please try again.');
     }
   };
 
-  const handleAnother = () => { setSentTo(''); setError(''); reset(); };
+  const copyLink = () => {
+    navigator.clipboard.writeText(inviteUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleAnother = () => { setSentTo(''); setInviteUrl(''); setEmailFailed(false); setError(''); setCopied(false); reset(); };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -34,21 +46,40 @@ const InviteReviewer = () => {
       </div>
 
       {sentTo ? (
-        <div className="card p-8 text-center animate-fade-in">
-          <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={28} className="text-green-500" />
+        <div className="card p-8 animate-fade-in">
+          <div className="text-center mb-6">
+            <div className={`w-14 h-14 ${emailFailed ? 'bg-yellow-50' : 'bg-green-50'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              {emailFailed
+                ? <AlertCircle size={28} className="text-yellow-500" />
+                : <CheckCircle size={28} className="text-green-500" />}
+            </div>
+            <p className="text-base font-semibold text-gray-800 mb-1">
+              {emailFailed ? 'Reviewer added — email not sent' : 'Invitation sent!'}
+            </p>
+            <p className="text-sm text-gray-400">
+              {emailFailed
+                ? <>The reviewer account was created for <span className="font-semibold text-gray-600">{sentTo}</span> but the email could not be delivered. Copy the link below and share it manually.</>
+                : <>An access link has been sent to <span className="font-semibold text-gray-600">{sentTo}</span>. They can click it to enter the admin portal directly.</>}
+            </p>
           </div>
-          <p className="text-base font-semibold text-gray-800 mb-1">Invitation sent!</p>
-          <p className="text-sm text-gray-400 mb-6">
-            An access link has been sent to{' '}
-            <span className="font-semibold text-gray-600">{sentTo}</span>.
-            They can click it to enter the admin portal directly.
-          </p>
+
+          {(emailFailed && inviteUrl) && (
+            <div className="mb-6 p-3 bg-gray-50 border border-gray-200 flex items-center gap-2">
+              <Link size={13} className="text-gray-400 flex-shrink-0" />
+              <p className="text-xs text-gray-600 truncate flex-1">{inviteUrl}</p>
+              <button onClick={copyLink}
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition-opacity flex-shrink-0">
+                <Copy size={12} />
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-3 justify-center">
             <button onClick={handleAnother} className="btn-primary">
               <UserPlus size={14} /> Invite Another
             </button>
-            <button onClick={handleAnother} className="btn-outline">
+            <button onClick={() => navigate('/admin/dashboard')} className="btn-outline">
               Done
             </button>
           </div>
