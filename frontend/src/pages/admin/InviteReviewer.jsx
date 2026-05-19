@@ -79,7 +79,7 @@ const InviteReviewer = () => {
             <button onClick={handleAnother} className="btn-primary">
               <UserPlus size={14} /> Invite Another
             </button>
-            <button onClick={() => navigate('/admin/dashboard')} className="btn-outline">
+            <button onClick={handleAnother} className="btn-outline">
               Done
             </button>
           </div>
