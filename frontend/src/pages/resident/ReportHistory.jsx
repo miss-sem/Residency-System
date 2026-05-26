@@ -43,13 +43,13 @@ const buildParams = (statusFilter, weekPreset, customFrom, customTo) => {
   return params;
 };
 
-const ReportHistory = () => {
+const ReportHistory = ({ defaultStatus = 'all' }) => {
   const navigate = useNavigate();
   const [reports, setReports]       = useState([]);
   const [loading, setLoading]       = useState(true);
 
   // filter state
-  const [statusFilter, setStatus]   = useState('all');
+  const [statusFilter, setStatus]   = useState(defaultStatus);
   const [weekPreset, setWeekPreset] = useState('all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo]     = useState('');
@@ -65,8 +65,10 @@ const ReportHistory = () => {
       .finally(() => setLoading(false));
   };
 
-  // initial load
-  useEffect(() => { doFetch({}); }, []);
+  // initial load — apply defaultStatus if provided
+  useEffect(() => {
+    doFetch(defaultStatus !== 'all' ? { status: defaultStatus } : {});
+  }, [defaultStatus]);
 
   const handleStatusChange = (f) => {
     setStatus(f);
@@ -103,8 +105,12 @@ const ReportHistory = () => {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">My Reports</h1>
-        <p className="text-sm text-gray-400">Track all your weekly submissions</p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">
+          {defaultStatus === 'draft' ? 'Drafts' : defaultStatus === 'submitted' ? 'Submitted Reports' : 'My Reports'}
+        </h1>
+        <p className="text-sm text-gray-400">
+          {defaultStatus === 'draft' ? 'Reports you are still working on' : defaultStatus === 'submitted' ? 'Reports you have submitted for review' : 'Track all your weekly submissions'}
+        </p>
       </div>
 
       {/* Filters */}

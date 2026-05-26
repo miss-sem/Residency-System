@@ -50,6 +50,8 @@ const App = () => (
                 <Route path="/resident/reports/:id/edit" element={<CreateReport />} />
                 <Route path="/resident/reports"          element={<ReportHistory />} />
                 <Route path="/resident/reports/:id"      element={<ViewReport />} />
+                <Route path="/resident/submitted"        element={<ReportHistory defaultStatus="submitted" />} />
+                <Route path="/resident/drafts"           element={<ReportHistory defaultStatus="draft" />} />
                 <Route path="/resident/generate"         element={<GenerateReport />} />
                 <Route path="/resident/messages"         element={<ResidentMessages />} />
                 <Route path="/resident/calendar"         element={<ResidentCalendar />} />

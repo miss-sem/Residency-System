@@ -4,16 +4,17 @@ import { useMessages } from '../context/MessageContext';
 import {
   Users, ClipboardList, LayoutDashboard,
   LogOut, ChevronRight, X, Settings, Download,
-  MessageSquare, Calendar, Plus, UserPlus,
+  MessageSquare, Calendar, UserPlus,
+  Send, PenLine, FileText,
 } from 'lucide-react';
 
 const residentLinks = [
-  { to: '/resident/reports/new', icon: Plus,            label: 'Create' },
-  { to: '/resident/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/resident/reports',     icon: ClipboardList,   label: 'My Reports' },
-  { to: '/resident/generate',    icon: Download,        label: 'Generate Report' },
-  { to: '/resident/calendar',    icon: Calendar,        label: 'Calendar' },
-  { to: '/resident/messages',    icon: MessageSquare,   label: 'Chat' },
+  { to: '/resident/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/resident/messages',   icon: MessageSquare,   label: 'Chat' },
+  { to: '/resident/calendar',   icon: Calendar,        label: 'Calendar' },
+  { to: '/resident/submitted',  icon: Send,            label: 'Submitted' },
+  { to: '/resident/drafts',     icon: PenLine,         label: 'Draft' },
+  { to: '/resident/generate',   icon: FileText,        label: 'My Reports' },
 ];
 
 const adminLinks = [

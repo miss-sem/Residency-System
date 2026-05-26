@@ -210,9 +210,9 @@ const GenerateReport = () => {
       {/* Header */}
       <div className="animate-slide-up">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <FileText size={20} className="text-primary" /> Generate Report
+          <FileText size={20} className="text-primary" /> My Reports
         </h1>
-        <p className="text-sm text-gray-400 mt-1">Select a report type, preview and download as PDF</p>
+        <p className="text-sm text-gray-400 mt-1">Preview and download your submitted reports as PDF</p>
       </div>
 
       {/* Type tabs */}
