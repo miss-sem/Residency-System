@@ -280,8 +280,8 @@ const ResidentDashboard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Reports" value={total}        icon={FileText}    accent="primary" delay={80}  />
         <StatCard label="Reviewed"      value={reviewed}     icon={CheckCircle} accent="green"   delay={140} />
-        <StatCard label="Submitted"     value={submitted}    icon={TrendingUp}  accent="blue"    delay={200} />
-        <StatCard label="Drafts"        value={draftsCount}  icon={Clock}       accent="amber"   delay={260} />
+        <StatCard label="Drafts"        value={draftsCount}  icon={Clock}       accent="amber"   delay={200} />
+        <StatCard label="Submitted"     value={submitted}    icon={TrendingUp}  accent="blue"    delay={260} />
       </div>
 
       {/* ── Middle: breakdown + drafts ── */}
