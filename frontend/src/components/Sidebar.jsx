@@ -19,10 +19,10 @@ const residentLinks = [
 
 const adminLinks = [
   { to: '/admin/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/residents',  icon: Users,           label: 'Residents' },
-  { to: '/admin/reports',    icon: ClipboardList,   label: 'Reports' },
-  { to: '/admin/invite',     icon: UserPlus,        label: 'Invite Reviewer' },
   { to: '/admin/messages',   icon: MessageSquare,   label: 'Chat' },
+  { to: '/admin/residents',  icon: Users,           label: 'Residents' },
+  { to: '/admin/invite',     icon: UserPlus,        label: 'Invite Reviewer' },
+  { to: '/admin/reports',    icon: ClipboardList,   label: 'Reports' },
 ];
 
 const reviewerLinks = [
