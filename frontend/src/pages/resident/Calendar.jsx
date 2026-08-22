@@ -169,7 +169,7 @@ const ResidentCalendar = () => {
       </div>
 
       {/* Main row: Calendar + Summary */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
+      <div className="flex flex-col lg:flex-row gap-5 items-stretch lg:items-start">
 
         {/* ── Calendar card ── */}
         <div className="flex-1 card overflow-hidden animate-slide-up hover:shadow-md transition-shadow duration-300"

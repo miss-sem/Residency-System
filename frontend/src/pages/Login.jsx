@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const WORDS = ['Welcome!', 'Hello!', 'Log in to continue!'];
 
@@ -39,6 +39,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate  = useNavigate();
   const [serverError, setServerError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const heading = useTypewriter();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
@@ -107,10 +108,10 @@ const Login = () => {
           <div className="relative">
             <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               placeholder="••••••••"
-              className={`w-full pl-10 pr-4 py-3 text-sm bg-white border text-gray-800 placeholder-gray-300
+              className={`w-full pl-10 pr-10 py-3 text-sm bg-white border text-gray-800 placeholder-gray-300
                 transition-all duration-200 focus:outline-none focus:ring-2
                 ${errors.password || serverError
                   ? 'border-blue-300 focus:border-blue-400 focus:ring-blue-100'
@@ -120,6 +121,13 @@ const Login = () => {
                 minLength: { value: 6, message: 'At least 6 characters' },
               })}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(s => !s)}
+              tabIndex={-1}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
           </div>
           {errors.password && <p className="mt-1.5 text-xs text-blue-500">{errors.password.message}</p>}
         </div>
