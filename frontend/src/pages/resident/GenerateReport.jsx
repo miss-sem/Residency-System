@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import StatusBadge from '../../components/StatusBadge';
 import UnitBadge from '../../components/UnitBadge';
 import EmptyState from '../../components/EmptyState';
+import PdfCanvasViewer from '../../components/PdfCanvasViewer';
 import { formatWeek, formatDate, DAYS, DAY_LABELS } from '../../utils/helpers';
 import {
   Download, FileText, CheckSquare, Square, Loader2,
@@ -34,26 +35,26 @@ const PreviewModal = ({ url, title, onClose, onDownload, downloading }) => (
       onClick={e => e.stopPropagation()}
     >
       {/* Modal header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Eye size={15} className="text-primary" />
-          <span className="text-sm font-semibold text-gray-700 truncate max-w-[400px]">{title}</span>
+      <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Eye size={15} className="text-primary flex-shrink-0" />
+          <span className="text-sm font-semibold text-gray-700 truncate">{title}</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <button
             onClick={onDownload}
             disabled={downloading}
-            className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50"
+            className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline disabled:opacity-50 whitespace-nowrap"
           >
             {downloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
             Download
           </button>
-          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-700 transition-colors">
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0">
             <X size={16} />
           </button>
         </div>
       </div>
-      <iframe src={url} className="flex-1 w-full border-0" title="Report Preview" />
+      <PdfCanvasViewer url={url} />
     </div>
   </div>
 );
