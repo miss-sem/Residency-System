@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LogBook</string>
+    <string name="title_activity_main">LogBook</string>
+    <string name="package_name">com.stepsbuild.logbook</string>
+    <string name="custom_url_scheme">com.stepsbuild.logbook</string>
+</resources>

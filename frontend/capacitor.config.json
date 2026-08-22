@@ -1,0 +1,22 @@
+{
+  "appId": "com.stepsbuild.logbook",
+  "appName": "LogBook",
+  "webDir": "dist",
+  "server": {
+    "url": "https://logbook.stepsbuild.com",
+    "allowNavigation": ["logbook.stepsbuild.com"],
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#FFFFFF"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#FFFFFF"
+    }
+  }
+}
