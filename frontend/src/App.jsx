@@ -27,6 +27,7 @@ import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
 import AcceptInvite    from './pages/AcceptInvite';
 import ReviewerAccess  from './pages/ReviewerAccess';
+import PrivacyPolicy   from './pages/PrivacyPolicy';
 
 const App = () => (
   <AuthProvider>
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/reset-password"  element={<ResetPassword />} />
               <Route path="/accept-invite"   element={<AcceptInvite />} />
               <Route path="/reviewer-access" element={<ReviewerAccess />} />
+              <Route path="/privacy-policy"  element={<PrivacyPolicy />} />
               <Route path="/" element={<Navigate to="/login" replace />} />
 
               {/* Resident routes */}
