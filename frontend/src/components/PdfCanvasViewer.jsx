@@ -8,7 +8,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 // Mobile WebViews (Android system WebView / Capacitor) have no built-in PDF
 // renderer, so an <iframe src="blob:..."> just shows blank. Render each page
 // to a canvas ourselves so the preview works the same everywhere.
-const PdfCanvasViewer = ({ url }) => {
+const PdfCanvasViewer = ({ blob }) => {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);
@@ -22,7 +22,11 @@ const PdfCanvasViewer = ({ url }) => {
 
     (async () => {
       try {
-        const pdf = await pdfjsLib.getDocument(url).promise;
+        // Fetching a blob: URL from inside the pdf.js worker is unreliable in
+        // Android's WebView, so read the bytes on the main thread and hand
+        // pdf.js the raw data instead of a URL.
+        const arrayBuffer = await blob.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         for (let i = 1; i <= pdf.numPages; i++) {
           if (cancelled) return;
           const page     = await pdf.getPage(i);
@@ -43,7 +47,7 @@ const PdfCanvasViewer = ({ url }) => {
     })();
 
     return () => { cancelled = true; };
-  }, [url]);
+  }, [blob]);
 
   if (error) {
     return (

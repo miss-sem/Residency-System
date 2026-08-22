@@ -24,7 +24,7 @@ const getQuarterKey = (dateStr) => {
 const STATUS_BAR = { submitted: 'bg-blue-400', reviewed: 'bg-green-400' };
 
 /* ── Modal preview ───────────────────────────────────────────────────────── */
-const PreviewModal = ({ url, title, onClose, onDownload, downloading }) => (
+const PreviewModal = ({ blob, title, onClose, onDownload, downloading }) => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in p-4"
     onClick={onClose}
@@ -54,7 +54,7 @@ const PreviewModal = ({ url, title, onClose, onDownload, downloading }) => (
           </button>
         </div>
       </div>
-      <PdfCanvasViewer url={url} />
+      <PdfCanvasViewer blob={blob} />
     </div>
   </div>
 );
@@ -95,10 +95,7 @@ const GenerateReport = () => {
   });
 
   /* ── close modal ── */
-  const closeModal = () => {
-    if (modal?.url) URL.revokeObjectURL(modal.url);
-    setModal(null);
-  };
+  const closeModal = () => setModal(null);
 
   /* ── get full report ── */
   const getFullReport = (id) =>
@@ -113,9 +110,8 @@ const GenerateReport = () => {
     try {
       const full = await getFullReport(reportId);
       const blob = await pdf(<SingleReportDoc report={full} />).toBlob();
-      const url  = URL.createObjectURL(blob);
       closeModal();
-      setModal({ url, title: `${full.unit} — ${formatWeek(full.weekStartDate)}`, reportId });
+      setModal({ blob, title: `${full.unit} — ${formatWeek(full.weekStartDate)}`, reportId });
     } finally { setPreviewing(null); }
   };
 
@@ -128,9 +124,8 @@ const GenerateReport = () => {
     try {
       const full = await getFullReport(reportId);
       const blob = await pdf(<SingleDayDoc report={full} day={day} />).toBlob();
-      const url  = URL.createObjectURL(blob);
       closeModal();
-      setModal({ url, title: `${DAY_LABELS[day]} — ${full.unit} ${formatWeek(full.weekStartDate)}`, reportId, day });
+      setModal({ blob, title: `${DAY_LABELS[day]} — ${full.unit} ${formatWeek(full.weekStartDate)}`, reportId, day });
     } finally { setPreviewing(null); }
   };
 
@@ -421,7 +416,7 @@ const GenerateReport = () => {
       {/* Modal preview */}
       {modal && (
         <PreviewModal
-          url={modal.url}
+          blob={modal.blob}
           title={modal.title}
           onClose={closeModal}
           onDownload={handleModalDownload}
