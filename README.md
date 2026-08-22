@@ -83,7 +83,7 @@ log book/
 │
 └── frontend/
     ├── public/
-    │   └── ghs-logo.png           # Favicon + sidebar logo
+    │   └── favicon.svg            # Favicon
     ├── src/
     │   ├── components/
     │   │   ├── EmptyState.jsx     # Reusable empty list placeholder
