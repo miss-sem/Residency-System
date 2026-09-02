@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.stepsbuild.logbook",
+      "sha256_cert_fingerprints": [
+        "15:D8:E0:F9:19:0D:05:99:86:2D:A0:39:AF:88:F9:65:02:63:40:F0:37:3D:32:9F:B4:B5:D3:1A:8E:C6:50:28"
+      ]
+    }
+  }
+]

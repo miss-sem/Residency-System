@@ -18,6 +18,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- App Links: open logbook.stepsbuild.com links (reset-password,
+                 accept-invite, reviewer-access, etc.) directly in the app
+                 instead of the browser. Verified via /.well-known/assetlinks.json -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="logbook.stepsbuild.com" />
+            </intent-filter>
         </activity>
 
         <provider
